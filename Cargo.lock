@@ -45,6 +45,7 @@ name = "goldy_core"
 version = "0.1.0"
 dependencies = [
  "nalgebra",
+ "num-traits",
  "rand",
  "rand_chacha",
  "rand_distr",
