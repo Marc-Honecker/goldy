@@ -1,6 +1,7 @@
 use error::GoldyError;
 
 pub mod error;
+pub mod force_eval;
 pub mod observer;
 pub mod potential;
 pub mod thermostat;

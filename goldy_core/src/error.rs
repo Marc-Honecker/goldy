@@ -8,4 +8,6 @@ pub enum GoldyError {
     ValueError { expected: String, found: String },
     #[error("expected value to be greater than 0, but was {found:?}")]
     NegativValue { found: String },
+    #[error("An error occured: {msg:?}")]
+    CatchAll { msg: String },
 }
