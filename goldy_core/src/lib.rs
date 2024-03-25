@@ -9,3 +9,5 @@ pub mod units;
 pub mod vector;
 
 pub type Result<T> = std::result::Result<T, GoldyError>;
+
+pub type Float = f64;

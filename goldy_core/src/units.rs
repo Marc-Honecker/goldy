@@ -1,36 +1,36 @@
 use std::{fmt::Display, ops::Deref};
 
-use crate::{error::GoldyError, Result};
+use crate::{error::GoldyError, Float, Result};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Mass {
-    value: f64,
+    value: Float,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Energy {
-    value: f64,
+    value: Float,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct TimeStep {
-    value: f64,
+    value: Float,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Temperature {
-    value: f64,
+    value: Float,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Damping {
-    value: f64,
+    value: Float,
 }
 
 macro_rules! generate_guarded_new {
     ($struct_type: ident) => {
         impl $struct_type {
-            pub fn new(value: f64) -> Result<Self> {
+            pub fn new(value: Float) -> Result<Self> {
                 if value <= 0.0 {
                     Err(GoldyError::NegativValue {
                         found: value.to_string(),
@@ -49,7 +49,7 @@ generate_guarded_new!(Temperature);
 
 impl Damping {
     // Damping must be divided by TimeStep, so we need an extra implementation.
-    pub fn new(value: f64, dt: &TimeStep) -> Result<Self> {
+    pub fn new(value: Float, dt: &TimeStep) -> Result<Self> {
         if value <= 0.0 {
             Err(GoldyError::NegativValue {
                 found: value.to_string(),
@@ -61,7 +61,7 @@ impl Damping {
         }
     }
 
-    pub fn new_raw(value: f64) -> Result<Self> {
+    pub fn new_raw(value: Float) -> Result<Self> {
         if value <= 0.0 {
             Err(GoldyError::NegativValue {
                 found: value.to_string(),
@@ -74,7 +74,7 @@ impl Damping {
 
 impl Energy {
     // Energy can be positive and negative, so we can simply return it.
-    pub fn new(value: f64) -> Self {
+    pub fn new(value: Float) -> Self {
         Self { value }
     }
 }
@@ -82,7 +82,7 @@ impl Energy {
 macro_rules! generate_deref {
     ($struct_type: ident) => {
         impl Deref for $struct_type {
-            type Target = f64;
+            type Target = Float;
 
             #[inline]
             fn deref(&self) -> &Self::Target {
@@ -100,9 +100,9 @@ generate_deref!(Temperature);
 
 macro_rules! generate_as_ref {
     ($struct_type: ident) => {
-        impl AsRef<f64> for $struct_type {
+        impl AsRef<Float> for $struct_type {
             #[inline]
-            fn as_ref(&self) -> &f64 {
+            fn as_ref(&self) -> &Float {
                 &self.value
             }
         }

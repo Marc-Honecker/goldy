@@ -2,26 +2,26 @@ use std::ops::{Deref, DerefMut};
 
 use nalgebra::{SVector, Vector3};
 
-use crate::units::Mass;
+use crate::{units::Mass, Float};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Position {
-    value: Vector3<f64>,
+    value: Vector3<Float>,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Velocity {
-    value: Vector3<f64>,
+    value: Vector3<Float>,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Force {
-    value: Vector3<f64>,
+    value: Vector3<Float>,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Accelaration {
-    value: Vector3<f64>,
+    value: Vector3<Float>,
 }
 
 impl Force {
@@ -52,14 +52,14 @@ macro_rules! generate_new_from_iterator {
     ($struct_type: ident) => {
         impl $struct_type {
             #[inline]
-            pub fn new(value: Vector3<f64>) -> Self {
+            pub fn new(value: Vector3<Float>) -> Self {
                 Self { value }
             }
 
             #[inline]
             pub fn from_iterator<I>(iter: I) -> Self
             where
-                I: IntoIterator<Item = f64>,
+                I: IntoIterator<Item = Float>,
             {
                 Self {
                     value: SVector::from_iterator(iter),
@@ -77,7 +77,7 @@ generate_new_from_iterator!(Accelaration);
 macro_rules! generate_deref_deref_mut {
     ($type_name: ident) => {
         impl Deref for $type_name {
-            type Target = Vector3<f64>;
+            type Target = Vector3<Float>;
 
             #[inline]
             fn deref(&self) -> &Self::Target {
@@ -101,16 +101,16 @@ generate_deref_deref_mut!(Accelaration);
 
 macro_rules! generate_as_ref_as_mut {
     ($struct_type: ident) => {
-        impl AsRef<Vector3<f64>> for $struct_type {
+        impl AsRef<Vector3<Float>> for $struct_type {
             #[inline]
-            fn as_ref(&self) -> &Vector3<f64> {
+            fn as_ref(&self) -> &Vector3<Float> {
                 &self.value
             }
         }
 
-        impl AsMut<Vector3<f64>> for $struct_type {
+        impl AsMut<Vector3<Float>> for $struct_type {
             #[inline]
-            fn as_mut(&mut self) -> &mut Vector3<f64> {
+            fn as_mut(&mut self) -> &mut Vector3<Float> {
                 &mut self.value
             }
         }
@@ -139,8 +139,8 @@ generate_display!(Accelaration);
 
 macro_rules! generate_from {
     ($struct_type: ident) => {
-        impl From<Vector3<f64>> for $struct_type {
-            fn from(value: Vector3<f64>) -> Self {
+        impl From<Vector3<Float>> for $struct_type {
+            fn from(value: Vector3<Float>) -> Self {
                 $struct_type::new(value)
             }
         }
