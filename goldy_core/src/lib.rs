@@ -1,6 +1,7 @@
 use error::GoldyError;
 
 pub mod error;
+pub mod observer;
 pub mod potential;
 pub mod thermostat;
 pub mod units;

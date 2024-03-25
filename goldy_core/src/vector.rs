@@ -4,22 +4,22 @@ use nalgebra::{SVector, Vector3};
 
 use crate::units::Mass;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Position {
     value: Vector3<f64>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Velocity {
     value: Vector3<f64>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Force {
     value: Vector3<f64>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Accelaration {
     value: Vector3<f64>,
 }
