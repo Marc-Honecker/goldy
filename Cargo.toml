@@ -1,6 +1,7 @@
 workspace = { members = ["goldy_core"] }
+
 [package]
-name = "test_goldy"
+name = "goldy"
 version = "0.1.0"
 edition = "2021"
 

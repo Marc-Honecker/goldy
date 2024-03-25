@@ -1,65 +1,63 @@
 use std::ops::{Deref, DerefMut};
 
-use nalgebra::SVector;
-
-use crate::Real;
+use nalgebra::{SVector, Vector3};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Position<T: Real, const D: usize> {
-    value: SVector<T, D>,
+pub struct Position {
+    value: Vector3<f64>,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Velocity<T: Real, const D: usize> {
-    value: SVector<T, D>,
+pub struct Velocity {
+    value: Vector3<f64>,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Force<T: Real, const D: usize> {
-    value: SVector<T, D>,
+pub struct Force {
+    value: Vector3<f64>,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Accelaration<T: Real, const D: usize> {
-    value: SVector<T, D>,
+pub struct Accelaration {
+    value: Vector3<f64>,
 }
 
-impl<T: Real, const D: usize> Force<T, D> {
+impl Force {
     #[inline]
-    pub fn as_accelaration(&self, mass: T) -> Accelaration<T, D> {
+    pub fn as_accelaration(&self, mass: f64) -> Accelaration {
         Accelaration::new(self.value / mass)
     }
 
     #[inline]
-    pub fn to_accelaration(self, mass: T) -> Accelaration<T, D> {
+    pub fn to_accelaration(self, mass: f64) -> Accelaration {
         Accelaration::new(self.value / mass)
     }
 }
 
-impl<T: Real, const D: usize> Accelaration<T, D> {
+impl Accelaration {
     #[inline]
-    pub fn as_force(&self, mass: T) -> Force<T, D> {
+    pub fn as_force(&self, mass: f64) -> Force {
         Force::new(self.value * mass)
     }
 
     #[inline]
-    pub fn to_force(self, mass: T) -> Force<T, D> {
+    pub fn to_force(self, mass: f64) -> Force {
         Force::new(self.value * mass)
     }
 }
 
 macro_rules! generate_new_from_iterator {
     ($struct_type: ident) => {
-        impl<T: Real, const D: usize> $struct_type<T, D> {
+        impl $struct_type {
             #[inline]
-            pub fn new(value: SVector<T, D>) -> Self {
+            pub fn new(value: Vector3<f64>) -> Self {
                 Self { value }
             }
 
             #[inline]
             pub fn from_iterator<I>(iter: I) -> Self
             where
-                I: IntoIterator<Item = T>,
+                I: IntoIterator<Item = f64>,
             {
                 Self {
                     value: SVector::from_iterator(iter),
@@ -76,8 +74,8 @@ generate_new_from_iterator!(Accelaration);
 
 macro_rules! generate_deref_deref_mut {
     ($type_name: ident) => {
-        impl<T: Real, const D: usize> Deref for $type_name<T, D> {
-            type Target = SVector<T, D>;
+        impl Deref for $type_name {
+            type Target = Vector3<f64>;
 
             #[inline]
             fn deref(&self) -> &Self::Target {
@@ -85,7 +83,7 @@ macro_rules! generate_deref_deref_mut {
             }
         }
 
-        impl<T: Real, const D: usize> DerefMut for $type_name<T, D> {
+        impl DerefMut for $type_name {
             #[inline]
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.value
@@ -101,16 +99,16 @@ generate_deref_deref_mut!(Accelaration);
 
 macro_rules! generate_as_ref_as_mut {
     ($struct_type: ident) => {
-        impl<T: Real, const D: usize> AsRef<SVector<T, D>> for $struct_type<T, D> {
+        impl AsRef<Vector3<f64>> for $struct_type {
             #[inline]
-            fn as_ref(&self) -> &SVector<T, D> {
+            fn as_ref(&self) -> &Vector3<f64> {
                 &self.value
             }
         }
 
-        impl<T: Real, const D: usize> AsMut<SVector<T, D>> for $struct_type<T, D> {
+        impl AsMut<Vector3<f64>> for $struct_type {
             #[inline]
-            fn as_mut(&mut self) -> &mut SVector<T, D> {
+            fn as_mut(&mut self) -> &mut Vector3<f64> {
                 &mut self.value
             }
         }
@@ -124,7 +122,7 @@ generate_as_ref_as_mut!(Accelaration);
 
 macro_rules! generate_display {
     ($struct_type: ident) => {
-        impl<T: Real, const D: usize> std::fmt::Display for $struct_type<T, D> {
+        impl std::fmt::Display for $struct_type {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 std::fmt::Display::fmt(&self.value, f)
             }
@@ -139,8 +137,8 @@ generate_display!(Accelaration);
 
 macro_rules! generate_from {
     ($struct_type: ident) => {
-        impl<T: Real, const D: usize> From<SVector<T, D>> for $struct_type<T, D> {
-            fn from(value: SVector<T, D>) -> Self {
+        impl From<Vector3<f64>> for $struct_type {
+            fn from(value: Vector3<f64>) -> Self {
                 $struct_type::new(value)
             }
         }
