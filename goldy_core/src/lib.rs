@@ -4,6 +4,6 @@ pub mod error;
 pub mod potential;
 pub mod thermostat;
 pub mod units;
-pub mod util;
+pub mod vector;
 
 pub type Result<T> = std::result::Result<T, GoldyError>;
