@@ -19,7 +19,7 @@ for i_loop in range(n_loop):
     v_pot_1 = v_pot_2 = 0
     for i_time in range(n_relax + n_observ):
         force = -x
-        force = -gamma * v
+        force -= gamma * v
         force += rand_force_pre * np.random.uniform(-1.0, 1.0, size=n_atom)
         v += force * d_time
         x += v * d_time
@@ -34,4 +34,4 @@ for i_loop in range(n_loop):
     v_pot_2 /= n_observ
     t_kin_1 /= n_observ
     t_kin_2 /= n_observ
-    print(i_loop, v_pot_1, t_kin_1)
+    print(v_pot_1, t_kin_1)

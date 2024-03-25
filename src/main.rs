@@ -5,32 +5,36 @@ use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, StandardNormal, Uniform};
 
-use goldy_core::potential::{HarmonicOscillator, Potential};
+use goldy_core::{
+    potential::{HarmonicOscillator, Potential},
+    units::{Damping, Mass, Temperature, TimeStep},
+    vector::{Accelaration, Force, Position, Velocity},
+};
 
 fn main() {
-    let dt = 2.0 * PI / 80.0;
-    let gamma = 1e-2;
-    let temp = 70.0;
-    let mass = 1.0;
+    let dt = TimeStep::new(2.0 * PI / 80.0).unwrap();
+    let gamma = Damping::new(0.01, &dt).unwrap();
+    let temp = Temperature::new(1.0).unwrap();
+    let mass = Mass::new(1.0).unwrap();
     let num_atoms = 5_000;
     let k = 1.0;
 
-    let num_relax_runs = 8 * 100.max((1.0 / gamma) as u32);
+    let num_relax_runs = 8 * 100.max((1.0 / *gamma) as u32);
     let num_observe_runs = 32 * num_relax_runs;
     let n_loop = 16;
 
     // initializing thermostat
-    let mut langevin = Langevin::new(dt, gamma, temp, mass);
+    let mut langevin = Langevin::new(gamma, temp, mass);
     // initializing potential
     let mut potential = HarmonicOscillator::new(k);
 
     let mut rng = ChaChaRng::from_entropy();
     let normal = StandardNormal;
     let mut pos: Vec<_> = (0..num_atoms)
-        .map(|_| Vector3::from_iterator(normal.sample_iter(&mut rng)))
+        .map(|_| Position::from_iterator(normal.sample_iter(&mut rng)))
         .collect();
     let mut vel: Vec<_> = (0..num_atoms)
-        .map(|_| Vector3::from_iterator(normal.sample_iter(&mut rng)))
+        .map(|_| Velocity::from_iterator(normal.sample_iter(&mut rng)))
         .collect();
 
     for run in 0..n_loop {
@@ -45,7 +49,7 @@ fn main() {
             langevin.thermostat(&mut force, &vel);
 
             // converting forces to accelarations
-            let acc: Vec<_> = force.iter().map(|f| f / mass).collect();
+            let acc: Vec<_> = force.iter().map(|f| f.to_accelaration(&mass)).collect();
 
             // propagating the system
             propagate(&mut pos, &mut vel, &acc, dt);
@@ -53,10 +57,10 @@ fn main() {
             if i > num_relax_runs {
                 // calculating the mean kinetic energy
                 let t_kin_mean = vel.iter().map(|vel| vel.norm_squared()).sum::<f64>()
-                    / ((2 * num_atoms) as f64 * mass);
+                    / ((2 * num_atoms) as f64 * *mass);
 
                 // calculating the mean potential energy
-                let v_pot_mean = potential.energy(&pos).iter().sum::<f64>() / num_atoms as f64;
+                let v_pot_mean = potential.energy(&pos).iter().fold(0.0, |acc, &e| acc + *e);
 
                 // updating the potential energy moments
                 v_pot_1 += v_pot_mean;
@@ -85,12 +89,12 @@ struct Langevin {
     rand_force_pre: f64,
     rng: ChaChaRng,
     uniform: Uniform<f64>,
-    gamma: f64,
+    gamma: Damping,
 }
 
 impl Langevin {
-    fn new(dt: f64, gamma: f64, temp: f64, mass: f64) -> Self {
-        let rand_force_pre = (6.0 * mass * temp * gamma / dt).sqrt();
+    fn new(gamma: Damping, temp: Temperature, mass: Mass) -> Self {
+        let rand_force_pre = (6.0 * *mass * *temp * *gamma).sqrt();
         let rng = ChaChaRng::from_entropy();
         let uniform = Uniform::new_inclusive(-1.0, 1.0);
 
@@ -102,13 +106,13 @@ impl Langevin {
         }
     }
 
-    fn thermostat(&mut self, force: &mut [Vector3<f64>], vel: &[Vector3<f64>]) {
+    fn thermostat(&mut self, force: &mut [Force], vel: &[Velocity]) {
         force.iter_mut().zip(vel).for_each(|(force, vel)| {
-            *force -= *vel * self.gamma;
+            **force -= **vel * *self.gamma;
         });
 
         force.iter_mut().for_each(|force| {
-            *force += Vector3::from_element(1.0)
+            **force += Vector3::from_element(1.0)
                 * self.rand_force_pre
                 * self.uniform.sample(&mut self.rng);
         });
@@ -116,14 +120,14 @@ impl Langevin {
 }
 
 #[inline]
-fn propagate(pos: &mut [Vector3<f64>], vel: &mut [Vector3<f64>], acc: &[Vector3<f64>], dt: f64) {
+fn propagate(pos: &mut [Position], vel: &mut [Velocity], acc: &[Accelaration], dt: TimeStep) {
     // propagating the velocities
     vel.iter_mut().zip(acc).for_each(|(vel, &acc)| {
-        *vel += acc * dt;
+        **vel += *acc * *dt;
     });
 
     // propagating the positions
-    pos.iter_mut().zip(vel).for_each(|(pos, vel)| {
-        *pos += *vel * dt;
+    pos.iter_mut().zip(vel).for_each(|(pos, &mut vel)| {
+        **pos += *vel * *dt;
     });
 }
