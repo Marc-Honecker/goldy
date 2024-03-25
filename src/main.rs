@@ -1,4 +1,3 @@
-#![allow(unused)]
 use std::f64::consts::PI;
 
 use nalgebra::Vector3;
@@ -10,6 +9,7 @@ use goldy_core::{
     potential::{HarmonicOscillator, Potential},
     units::{Damping, Mass, Temperature, TimeStep},
     vector::{Accelaration, Force, Position, Velocity},
+    Float,
 };
 
 fn main() {
@@ -58,12 +58,12 @@ fn main() {
 
             if i > num_relax_runs {
                 // calculating the mean kinetic energy
-                let t_kin_mean = 0.5 * *mass * vel.iter().map(|vel| vel.dot(vel)).sum::<f64>()
-                    / num_atoms as f64;
+                let t_kin_mean = 0.5 * *mass * vel.iter().map(|vel| vel.dot(vel)).sum::<Float>()
+                    / num_atoms as Float;
 
                 // calculating the mean potential energy
-                let v_pot_mean =
-                    potential.energy(&pos).iter().fold(0.0, |acc, &e| acc + *e) / num_atoms as f64;
+                let v_pot_mean = potential.energy(&pos).iter().fold(0.0, |acc, &e| acc + *e)
+                    / num_atoms as Float;
 
                 // updating the potential energy moments
                 v_pot_1 += v_pot_mean;
@@ -76,12 +76,12 @@ fn main() {
         }
 
         // normalizing the potential energy moments
-        v_pot_1 /= num_observe_runs as f64;
-        v_pot_2 /= num_observe_runs as f64 * temp.powi(2);
+        v_pot_1 /= num_observe_runs as Float;
+        v_pot_2 /= num_observe_runs as Float * temp.powi(2);
 
         // normalizing the kinetic energy moments
-        t_kin_1 /= num_observe_runs as f64;
-        t_kin_2 /= num_observe_runs as f64 * temp.powi(2);
+        t_kin_1 /= num_observe_runs as Float;
+        t_kin_2 /= num_observe_runs as Float * temp.powi(2);
 
         // dumping the results
         println!("{run}\t{v_pot_1:.6}\t{v_pot_2:.6}\t{t_kin_1:.6}\t{t_kin_2:.6}");
@@ -89,9 +89,9 @@ fn main() {
 }
 
 struct Langevin {
-    rand_force_pre: f64,
+    rand_force_pre: Float,
     rng: ChaChaRng,
-    uniform: Uniform<f64>,
+    uniform: Uniform<Float>,
     gamma: Damping,
 }
 

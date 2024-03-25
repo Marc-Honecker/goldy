@@ -1,6 +1,7 @@
 use crate::{
     units::Energy,
     vector::{Force, Position},
+    Float,
 };
 
 pub trait Potential {
@@ -11,11 +12,11 @@ pub trait Potential {
 }
 
 pub struct HarmonicOscillator {
-    k: f64,
+    k: Float,
 }
 
 impl HarmonicOscillator {
-    pub fn new(k: f64) -> Self {
+    pub fn new(k: Float) -> Self {
         Self { k }
     }
 }
