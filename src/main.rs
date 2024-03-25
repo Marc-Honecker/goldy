@@ -1,3 +1,4 @@
+#![allow(unused)]
 use std::f64::consts::PI;
 
 use nalgebra::Vector3;
@@ -13,21 +14,22 @@ use goldy_core::{
 
 fn main() {
     let dt = TimeStep::new(2.0 * PI / 80.0).unwrap();
-    let gamma = Damping::new(0.01, &dt).unwrap();
+    let gamma = Damping::new_raw(0.01).unwrap();
     let temp = Temperature::new(1.0).unwrap();
-    let mass = Mass::new(1.0).unwrap();
-    let num_atoms = 5_000;
+    let mass = Mass::new(2.0).unwrap();
+    let num_atoms = 6_000;
     let k = 1.0;
 
-    let num_relax_runs = 8 * 100.max((1.0 / *gamma) as u32);
-    let num_observe_runs = 32 * num_relax_runs;
+    let num_relax_runs = 4 * 100.max((1.0 / (*gamma)) as usize);
+    let num_observe_runs = 64 * num_relax_runs;
     let n_loop = 16;
 
     // initializing thermostat
-    let mut langevin = Langevin::new(gamma, temp, mass);
+    let mut langevin = Langevin::new(dt, gamma, temp, mass);
     // initializing potential
     let mut potential = HarmonicOscillator::new(k);
 
+    // setting up random config
     let mut rng = ChaChaRng::from_entropy();
     let normal = StandardNormal;
     let mut pos: Vec<_> = (0..num_atoms)
@@ -56,11 +58,12 @@ fn main() {
 
             if i > num_relax_runs {
                 // calculating the mean kinetic energy
-                let t_kin_mean = vel.iter().map(|vel| vel.norm_squared()).sum::<f64>()
-                    / ((2 * num_atoms) as f64 * *mass);
+                let t_kin_mean = 0.5 * *mass * vel.iter().map(|vel| vel.dot(vel)).sum::<f64>()
+                    / num_atoms as f64;
 
                 // calculating the mean potential energy
-                let v_pot_mean = potential.energy(&pos).iter().fold(0.0, |acc, &e| acc + *e);
+                let v_pot_mean =
+                    potential.energy(&pos).iter().fold(0.0, |acc, &e| acc + *e) / num_atoms as f64;
 
                 // updating the potential energy moments
                 v_pot_1 += v_pot_mean;
@@ -81,7 +84,7 @@ fn main() {
         t_kin_2 /= num_observe_runs as f64 * temp.powi(2);
 
         // dumping the results
-        println!("{run}\t{t_kin_1:.6}\t{t_kin_2:.6}\t{v_pot_1:.6}\t{v_pot_2:.6}");
+        println!("{run}\t{v_pot_1:.6}\t{v_pot_2:.6}\t{t_kin_1:.6}\t{t_kin_2:.6}");
     }
 }
 
@@ -93,8 +96,8 @@ struct Langevin {
 }
 
 impl Langevin {
-    fn new(gamma: Damping, temp: Temperature, mass: Mass) -> Self {
-        let rand_force_pre = (6.0 * *mass * *temp * *gamma).sqrt();
+    fn new(dt: TimeStep, gamma: Damping, temp: Temperature, mass: Mass) -> Self {
+        let rand_force_pre = (6.0 * *mass * *temp * *gamma / *dt).sqrt();
         let rng = ChaChaRng::from_entropy();
         let uniform = Uniform::new_inclusive(-1.0, 1.0);
 

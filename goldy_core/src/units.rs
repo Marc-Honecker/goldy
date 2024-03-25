@@ -7,7 +7,7 @@ pub struct Mass {
     value: f64,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Energy {
     value: f64,
 }
@@ -58,6 +58,16 @@ impl Damping {
             Ok(Self {
                 value: value / **dt,
             })
+        }
+    }
+
+    pub fn new_raw(value: f64) -> Result<Self> {
+        if value <= 0.0 {
+            Err(GoldyError::NegativValue {
+                found: value.to_string(),
+            })
+        } else {
+            Ok(Self { value })
         }
     }
 }
