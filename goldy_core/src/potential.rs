@@ -1,10 +1,13 @@
-use nalgebra::Vector3;
+use crate::{
+    units::Energy,
+    vector::{Force, Position},
+};
 
 pub trait Potential {
     /// Computes the potential energy.
-    fn energy(&mut self, pos: &[Vector3<f64>]) -> Vec<f64>;
+    fn energy(&mut self, pos: &[Position]) -> Vec<Energy>;
     /// Computes -dU/dr.
-    fn force(&mut self, pos: &[Vector3<f64>]) -> Vec<Vector3<f64>>;
+    fn force(&mut self, pos: &[Position]) -> Vec<Force>;
 }
 
 pub struct HarmonicOscillator {
@@ -18,13 +21,13 @@ impl HarmonicOscillator {
 }
 
 impl Potential for HarmonicOscillator {
-    fn force(&mut self, pos: &[Vector3<f64>]) -> Vec<Vector3<f64>> {
-        pos.iter().map(|&pos| -self.k * pos).collect()
+    fn force(&mut self, pos: &[Position]) -> Vec<Force> {
+        pos.iter().map(|&pos| Force::new(-self.k * *pos)).collect()
     }
 
-    fn energy(&mut self, pos: &[Vector3<f64>]) -> Vec<f64> {
+    fn energy(&mut self, pos: &[Position]) -> Vec<Energy> {
         pos.iter()
-            .map(|&pos| 0.5 * self.k * pos.dot(&pos))
+            .map(|&pos| Energy::new(0.5 * self.k * pos.dot(&pos)))
             .collect()
     }
 }

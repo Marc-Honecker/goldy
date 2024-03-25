@@ -2,6 +2,8 @@ use std::ops::{Deref, DerefMut};
 
 use nalgebra::{SVector, Vector3};
 
+use crate::units::Mass;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
     value: Vector3<f64>,
@@ -24,25 +26,25 @@ pub struct Accelaration {
 
 impl Force {
     #[inline]
-    pub fn as_accelaration(&self, mass: f64) -> Accelaration {
-        Accelaration::new(self.value / mass)
+    pub fn as_accelaration(&self, mass: &Mass) -> Accelaration {
+        Accelaration::new(self.value / **mass)
     }
 
     #[inline]
-    pub fn to_accelaration(self, mass: f64) -> Accelaration {
-        Accelaration::new(self.value / mass)
+    pub fn to_accelaration(self, mass: &Mass) -> Accelaration {
+        Accelaration::new(self.value / **mass)
     }
 }
 
 impl Accelaration {
     #[inline]
-    pub fn as_force(&self, mass: f64) -> Force {
-        Force::new(self.value * mass)
+    pub fn as_force(&self, mass: &Mass) -> Force {
+        Force::new(self.value * **mass)
     }
 
     #[inline]
-    pub fn to_force(self, mass: f64) -> Force {
-        Force::new(self.value * mass)
+    pub fn to_force(self, mass: &Mass) -> Force {
+        Force::new(self.value * **mass)
     }
 }
 
