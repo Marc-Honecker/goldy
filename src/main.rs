@@ -1,6 +1,6 @@
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 
-use nalgebra::Vector3;
+use nalgebra::SVector;
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, StandardNormal, Uniform};
@@ -16,8 +16,8 @@ fn main() {
     let dt = TimeStep::new(2.0 * PI / 80.0).unwrap();
     let gamma = Damping::new_raw(0.01).unwrap();
     let temp = Temperature::new(1.0).unwrap();
-    let mass = Mass::new(2.0).unwrap();
-    let num_atoms = 6_000;
+    let mass = Mass::new(1.0).unwrap();
+    let num_atoms = 1_000;
     let k = 1.0;
 
     let num_relax_runs = 4 * 100.max((1.0 / (*gamma)) as usize);
@@ -33,10 +33,10 @@ fn main() {
     let mut rng = ChaChaRng::from_entropy();
     let normal = StandardNormal;
     let mut pos: Vec<_> = (0..num_atoms)
-        .map(|_| Position::from_iterator(normal.sample_iter(&mut rng)))
+        .map(|_| Position::<3>::from_iterator(normal.sample_iter(&mut rng)))
         .collect();
     let mut vel: Vec<_> = (0..num_atoms)
-        .map(|_| Velocity::from_iterator(normal.sample_iter(&mut rng)))
+        .map(|_| Velocity::<3>::from_iterator(normal.sample_iter(&mut rng)))
         .collect();
 
     for run in 0..n_loop {
@@ -109,13 +109,13 @@ impl Langevin {
         }
     }
 
-    fn thermostat(&mut self, force: &mut [Force], vel: &[Velocity]) {
+    fn thermostat<const D: usize>(&mut self, force: &mut [Force<D>], vel: &[Velocity<D>]) {
         force.iter_mut().zip(vel).for_each(|(force, vel)| {
             **force -= **vel * *self.gamma;
         });
 
         force.iter_mut().for_each(|force| {
-            **force += Vector3::from_element(1.0)
+            **force += SVector::from_element(1.0)
                 * self.rand_force_pre
                 * self.uniform.sample(&mut self.rng);
         });
@@ -123,7 +123,12 @@ impl Langevin {
 }
 
 #[inline]
-fn propagate(pos: &mut [Position], vel: &mut [Velocity], acc: &[Accelaration], dt: TimeStep) {
+fn propagate<const D: usize>(
+    pos: &mut [Position<D>],
+    vel: &mut [Velocity<D>],
+    acc: &[Accelaration<D>],
+    dt: TimeStep,
+) {
     // propagating the velocities
     vel.iter_mut().zip(acc).for_each(|(vel, &acc)| {
         **vel += *acc * *dt;
