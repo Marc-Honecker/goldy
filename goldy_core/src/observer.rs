@@ -15,7 +15,7 @@ impl Observer {
     }
 
     // TODO: implement
-    pub fn measure_kinetic_energy(&mut self, _vel: &[Velocity]) {
+    pub fn measure_kinetic_energy<const D: usize>(&mut self, _vel: &[Velocity<D>]) {
         unimplemented!()
     }
 

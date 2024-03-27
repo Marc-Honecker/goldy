@@ -1,58 +1,58 @@
 use std::ops::{Deref, DerefMut};
 
-use nalgebra::{SVector, Vector3};
+use nalgebra::SVector;
 
 use crate::{units::Mass, Float};
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Position {
-    value: Vector3<Float>,
+#[derive(Debug, Clone, Copy)]
+pub struct Position<const D: usize> {
+    value: SVector<Float, D>,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Velocity {
-    value: Vector3<Float>,
+#[derive(Debug, Clone, Copy)]
+pub struct Velocity<const D: usize> {
+    value: SVector<Float, D>,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Force {
-    value: Vector3<Float>,
+#[derive(Debug, Clone, Copy)]
+pub struct Force<const D: usize> {
+    value: SVector<Float, D>,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Accelaration {
-    value: Vector3<Float>,
+#[derive(Debug, Clone, Copy)]
+pub struct Accelaration<const D: usize> {
+    value: SVector<Float, D>,
 }
 
-impl Force {
+impl<const D: usize> Force<D> {
     #[inline]
-    pub fn as_accelaration(&self, mass: &Mass) -> Accelaration {
+    pub fn as_accelaration(&self, mass: &Mass) -> Accelaration<D> {
         Accelaration::new(self.value / **mass)
     }
 
     #[inline]
-    pub fn to_accelaration(self, mass: &Mass) -> Accelaration {
+    pub fn to_accelaration(self, mass: &Mass) -> Accelaration<D> {
         Accelaration::new(self.value / **mass)
     }
 }
 
-impl Accelaration {
+impl<const D: usize> Accelaration<D> {
     #[inline]
-    pub fn as_force(&self, mass: &Mass) -> Force {
+    pub fn as_force(&self, mass: &Mass) -> Force<D> {
         Force::new(self.value * **mass)
     }
 
     #[inline]
-    pub fn to_force(self, mass: &Mass) -> Force {
+    pub fn to_force(self, mass: &Mass) -> Force<D> {
         Force::new(self.value * **mass)
     }
 }
 
 macro_rules! generate_new_from_iterator {
     ($struct_type: ident) => {
-        impl $struct_type {
+        impl<const D: usize> $struct_type<D> {
             #[inline]
-            pub fn new(value: Vector3<Float>) -> Self {
+            pub fn new(value: SVector<Float, D>) -> Self {
                 Self { value }
             }
 
@@ -63,6 +63,13 @@ macro_rules! generate_new_from_iterator {
             {
                 Self {
                     value: SVector::from_iterator(iter),
+                }
+            }
+
+            #[inline]
+            pub fn zeros() -> Self {
+                Self {
+                    value: SVector::zeros(),
                 }
             }
         }
@@ -76,8 +83,8 @@ generate_new_from_iterator!(Accelaration);
 
 macro_rules! generate_deref_deref_mut {
     ($type_name: ident) => {
-        impl Deref for $type_name {
-            type Target = Vector3<Float>;
+        impl<const D: usize> Deref for $type_name<D> {
+            type Target = SVector<Float, D>;
 
             #[inline]
             fn deref(&self) -> &Self::Target {
@@ -85,7 +92,7 @@ macro_rules! generate_deref_deref_mut {
             }
         }
 
-        impl DerefMut for $type_name {
+        impl<const D: usize> DerefMut for $type_name<D> {
             #[inline]
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.value
@@ -101,16 +108,16 @@ generate_deref_deref_mut!(Accelaration);
 
 macro_rules! generate_as_ref_as_mut {
     ($struct_type: ident) => {
-        impl AsRef<Vector3<Float>> for $struct_type {
+        impl<const D: usize> AsRef<SVector<Float, D>> for $struct_type<D> {
             #[inline]
-            fn as_ref(&self) -> &Vector3<Float> {
+            fn as_ref(&self) -> &SVector<Float, D> {
                 &self.value
             }
         }
 
-        impl AsMut<Vector3<Float>> for $struct_type {
+        impl<const D: usize> AsMut<SVector<Float, D>> for $struct_type<D> {
             #[inline]
-            fn as_mut(&mut self) -> &mut Vector3<Float> {
+            fn as_mut(&mut self) -> &mut SVector<Float, D> {
                 &mut self.value
             }
         }
@@ -124,7 +131,7 @@ generate_as_ref_as_mut!(Accelaration);
 
 macro_rules! generate_display {
     ($struct_type: ident) => {
-        impl std::fmt::Display for $struct_type {
+        impl<const D: usize> std::fmt::Display for $struct_type<D> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 std::fmt::Display::fmt(&self.value, f)
             }
@@ -139,8 +146,8 @@ generate_display!(Accelaration);
 
 macro_rules! generate_from {
     ($struct_type: ident) => {
-        impl From<Vector3<Float>> for $struct_type {
-            fn from(value: Vector3<Float>) -> Self {
+        impl<const D: usize> From<SVector<Float, D>> for $struct_type<D> {
+            fn from(value: SVector<Float, D>) -> Self {
                 $struct_type::new(value)
             }
         }

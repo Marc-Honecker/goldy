@@ -4,11 +4,11 @@ use crate::{
     Float,
 };
 
-pub trait Potential {
+pub trait Potential<const D: usize> {
     /// Computes the potential energy.
-    fn energy(&mut self, pos: &[Position]) -> Vec<Energy>;
+    fn energy(&mut self, pos: &[Position<D>]) -> Vec<Energy>;
     /// Computes -dU/dr.
-    fn force(&mut self, pos: &[Position]) -> Vec<Force>;
+    fn force(&mut self, pos: &[Position<D>]) -> Vec<Force<D>>;
 }
 
 pub struct HarmonicOscillator {
@@ -21,12 +21,12 @@ impl HarmonicOscillator {
     }
 }
 
-impl Potential for HarmonicOscillator {
-    fn force(&mut self, pos: &[Position]) -> Vec<Force> {
+impl<const D: usize> Potential<D> for HarmonicOscillator {
+    fn force(&mut self, pos: &[Position<D>]) -> Vec<Force<D>> {
         pos.iter().map(|&pos| Force::new(-self.k * *pos)).collect()
     }
 
-    fn energy(&mut self, pos: &[Position]) -> Vec<Energy> {
+    fn energy(&mut self, pos: &[Position<D>]) -> Vec<Energy> {
         pos.iter()
             .map(|&pos| Energy::new(0.5 * self.k * pos.dot(&pos)))
             .collect()
