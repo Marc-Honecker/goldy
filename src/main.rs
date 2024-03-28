@@ -9,7 +9,7 @@ use goldy_core::{
     potential::{HarmonicOscillator, Potential},
     units::{Damping, Mass, Temperature, TimeStep},
     vector::{Accelaration, Force, Position, Velocity},
-    Float,
+    Real,
 };
 
 fn main() {
@@ -33,10 +33,10 @@ fn main() {
     let mut rng = ChaChaRng::from_entropy();
     let normal = StandardNormal;
     let mut pos: Vec<_> = (0..num_atoms)
-        .map(|_| Position::<3>::from_iterator(normal.sample_iter(&mut rng)))
+        .map(|_| Position::<f32, 3>::from_iterator(normal.sample_iter(&mut rng)))
         .collect();
     let mut vel: Vec<_> = (0..num_atoms)
-        .map(|_| Velocity::<3>::from_iterator(normal.sample_iter(&mut rng)))
+        .map(|_| Velocity::from_iterator(normal.sample_iter(&mut rng)))
         .collect();
 
     for run in 0..n_loop {
@@ -58,12 +58,12 @@ fn main() {
 
             if i > num_relax_runs {
                 // calculating the mean kinetic energy
-                let t_kin_mean = 0.5 * *mass * vel.iter().map(|vel| vel.dot(vel)).sum::<Float>()
-                    / num_atoms as Float;
+                let t_kin_mean = 0.5 * *mass * vel.iter().map(|vel| vel.dot(vel)).sum::<f32>()
+                    / num_atoms as f32;
 
                 // calculating the mean potential energy
-                let v_pot_mean = potential.energy(&pos).iter().fold(0.0, |acc, &e| acc + *e)
-                    / num_atoms as Float;
+                let v_pot_mean =
+                    potential.energy(&pos).iter().fold(0.0, |acc, &e| acc + *e) / num_atoms as f32;
 
                 // updating the potential energy moments
                 v_pot_1 += v_pot_mean;
@@ -76,30 +76,38 @@ fn main() {
         }
 
         // normalizing the potential energy moments
-        v_pot_1 /= num_observe_runs as Float;
-        v_pot_2 /= num_observe_runs as Float * temp.powi(2);
+        v_pot_1 /= num_observe_runs as f32;
+        v_pot_2 /= num_observe_runs as f32 * temp.powi(2);
 
         // normalizing the kinetic energy moments
-        t_kin_1 /= num_observe_runs as Float;
-        t_kin_2 /= num_observe_runs as Float * temp.powi(2);
+        t_kin_1 /= num_observe_runs as f32;
+        t_kin_2 /= num_observe_runs as f32 * temp.powi(2);
 
         // dumping the results
         println!("{run}\t{v_pot_1:.6}\t{v_pot_2:.6}\t{t_kin_1:.6}\t{t_kin_2:.6}");
     }
 }
 
-struct Langevin {
-    rand_force_pre: Float,
+struct Langevin<T>
+where
+    T: Real + rand_distr::uniform::SampleUniform,
+{
+    rand_force_pre: T,
     rng: ChaChaRng,
-    uniform: Uniform<Float>,
-    gamma: Damping,
+    uniform: Uniform<T>,
+    gamma: Damping<T>,
 }
 
-impl Langevin {
-    fn new(dt: TimeStep, gamma: Damping, temp: Temperature, mass: Mass) -> Self {
-        let rand_force_pre = (6.0 * *mass * *temp * *gamma / *dt).sqrt();
+impl<T> Langevin<T>
+where
+    T: Real + rand_distr::uniform::SampleUniform,
+{
+    fn new(dt: TimeStep<T>, gamma: Damping<T>, temp: Temperature<T>, mass: Mass<T>) -> Self {
+        let rand_force_pre =
+            nalgebra::ComplexField::sqrt(T::from_f64(6.0).unwrap() * *mass * *temp * *gamma / *dt);
         let rng = ChaChaRng::from_entropy();
-        let uniform = Uniform::new_inclusive(-1.0, 1.0);
+        let uniform =
+            Uniform::<T>::new_inclusive(T::from_f64(-1.0).unwrap(), T::from_f64(1.0).unwrap());
 
         Self {
             rand_force_pre,
@@ -109,13 +117,13 @@ impl Langevin {
         }
     }
 
-    fn thermostat<const D: usize>(&mut self, force: &mut [Force<D>], vel: &[Velocity<D>]) {
+    fn thermostat<const D: usize>(&mut self, force: &mut [Force<T, D>], vel: &[Velocity<T, D>]) {
         force.iter_mut().zip(vel).for_each(|(force, vel)| {
             **force -= **vel * *self.gamma;
         });
 
         force.iter_mut().for_each(|force| {
-            **force += SVector::from_element(1.0)
+            **force += SVector::from_element(T::one())
                 * self.rand_force_pre
                 * self.uniform.sample(&mut self.rng);
         });
@@ -123,11 +131,11 @@ impl Langevin {
 }
 
 #[inline]
-fn propagate<const D: usize>(
-    pos: &mut [Position<D>],
-    vel: &mut [Velocity<D>],
-    acc: &[Accelaration<D>],
-    dt: TimeStep,
+fn propagate<T: Real, const D: usize>(
+    pos: &mut [Position<T, D>],
+    vel: &mut [Velocity<T, D>],
+    acc: &[Accelaration<T, D>],
+    dt: TimeStep<T>,
 ) {
     // propagating the velocities
     vel.iter_mut().zip(acc).for_each(|(vel, &acc)| {
