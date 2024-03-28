@@ -1,31 +1,38 @@
 use crate::{
     units::{Damping, Mass},
     vector::{Position, Velocity},
+    Real,
 };
 
 #[allow(unused)]
-pub struct AtomStore<const D: usize> {
-    pos: Vec<Position<D>>,
-    vel: Vec<Velocity<D>>,
+pub struct AtomStore<T, const D: usize>
+where
+    T: Real,
+{
+    pos: Vec<Position<T, D>>,
+    vel: Vec<Velocity<T, D>>,
     id: Vec<usize>,
-    mass: Mass,
-    damping: Damping,
+    mass: Mass<T>,
+    damping: Damping<T>,
 }
 
-impl<const D: usize> AtomStore<D> {
-    pub fn get_positions(&self) -> &Vec<Position<D>> {
+impl<T, const D: usize> AtomStore<T, D>
+where
+    T: Real,
+{
+    pub fn get_positions(&self) -> &Vec<Position<T, D>> {
         &self.pos
     }
 
-    pub fn get_mut_positions(&mut self) -> &mut Vec<Position<D>> {
+    pub fn get_mut_positions(&mut self) -> &mut Vec<Position<T, D>> {
         &mut self.pos
     }
 
-    pub fn get_velocities(&self) -> &Vec<Velocity<D>> {
+    pub fn get_velocities(&self) -> &Vec<Velocity<T, D>> {
         &self.vel
     }
 
-    pub fn get_mut_velocities(&mut self) -> &mut Vec<Velocity<D>> {
+    pub fn get_mut_velocities(&mut self) -> &mut Vec<Velocity<T, D>> {
         &mut self.vel
     }
 }

@@ -1,4 +1,6 @@
 use error::GoldyError;
+use nalgebra::RealField;
+use num_traits::Float;
 
 pub mod atomstore;
 pub mod error;
@@ -11,5 +13,5 @@ pub mod vector;
 
 pub type Result<T> = std::result::Result<T, GoldyError>;
 
-// Ideally change to trait bounds.
-pub type Float = f32;
+pub trait Real: RealField + Float {}
+impl<T> Real for T where T: RealField + Float {}

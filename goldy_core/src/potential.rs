@@ -1,34 +1,48 @@
+use nalgebra::RealField;
+
 use crate::{
     units::Energy,
     vector::{Force, Position},
-    Float,
+    Real,
 };
 
-pub trait Potential<const D: usize> {
+pub trait Potential<T, const D: usize>
+where
+    T: Real,
+{
     /// Computes the potential energy.
-    fn energy(&mut self, pos: &[Position<D>]) -> Vec<Energy>;
+    fn energy(&mut self, pos: &[Position<T, D>]) -> Vec<Energy<T>>;
     /// Computes -dU/dr.
-    fn force(&mut self, pos: &[Position<D>]) -> Vec<Force<D>>;
+    fn force(&mut self, pos: &[Position<T, D>]) -> Vec<Force<T, D>>;
 }
 
-pub struct HarmonicOscillator {
-    k: Float,
+pub struct HarmonicOscillator<T>
+where
+    T: RealField,
+{
+    k: T,
 }
 
-impl HarmonicOscillator {
-    pub fn new(k: Float) -> Self {
+impl<T> HarmonicOscillator<T>
+where
+    T: RealField,
+{
+    pub fn new(k: T) -> Self {
         Self { k }
     }
 }
 
-impl<const D: usize> Potential<D> for HarmonicOscillator {
-    fn force(&mut self, pos: &[Position<D>]) -> Vec<Force<D>> {
-        pos.iter().map(|&pos| Force::new(-self.k * *pos)).collect()
+impl<T, const D: usize> Potential<T, D> for HarmonicOscillator<T>
+where
+    T: Real,
+{
+    fn force(&mut self, pos: &[Position<T, D>]) -> Vec<Force<T, D>> {
+        pos.iter().map(|pos| Force::new(**pos * -self.k)).collect()
     }
 
-    fn energy(&mut self, pos: &[Position<D>]) -> Vec<Energy> {
+    fn energy(&mut self, pos: &[Position<T, D>]) -> Vec<Energy<T>> {
         pos.iter()
-            .map(|&pos| Energy::new(0.5 * self.k * pos.dot(&pos)))
+            .map(|pos| Energy::new(T::from_f64(0.5).unwrap() * self.k * pos.dot(pos)))
             .collect()
     }
 }

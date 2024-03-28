@@ -2,19 +2,25 @@ use crate::{
     potential::Potential,
     thermostat::ForceDrivenThermostat,
     vector::{Force, Position, Velocity},
-    Result,
+    Real, Result,
 };
 
-pub struct ForceEval<const D: usize> {
-    thermostat: Option<Box<dyn ForceDrivenThermostat<D>>>,
-    potential: Option<Box<dyn Potential<D>>>,
+pub struct ForceEval<T, const D: usize>
+where
+    T: Real,
+{
+    thermostat: Option<Box<dyn ForceDrivenThermostat<T, D>>>,
+    potential: Option<Box<dyn Potential<T, D>>>,
 }
 
-impl<const D: usize> ForceEval<D> {
-    pub fn new<T, P>(thermostat: Option<T>, potential: Option<P>) -> Result<Self>
+impl<T, const D: usize> ForceEval<T, D>
+where
+    T: Real,
+{
+    pub fn new<F, P>(thermostat: Option<F>, potential: Option<P>) -> Result<Self>
     where
-        T: ForceDrivenThermostat<D> + 'static,
-        P: Potential<D> + 'static,
+        F: ForceDrivenThermostat<T, D> + 'static,
+        P: Potential<T, D> + 'static,
     {
         match thermostat {
             Some(t) => {
@@ -49,9 +55,9 @@ impl<const D: usize> ForceEval<D> {
 
     pub fn compute_new_forces(
         &mut self,
-        pos: &[Position<D>],
-        vel: &[Velocity<D>],
-    ) -> Vec<Force<D>> {
+        pos: &[Position<T, D>],
+        vel: &[Velocity<T, D>],
+    ) -> Vec<Force<T, D>> {
         let mut force = match &mut self.potential {
             Some(potential) => potential.force(pos),
             None => vec![Force::zeros(); pos.len()],
