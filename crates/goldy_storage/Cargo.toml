@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
+derive_builder = "0.20"
 nalgebra = { version = "0.32" }
 uuid = { version = "1.8.0", features = ["v4", "macro-diagnostics"] }
+
+goldy_core = { path = "../goldy_core/" }
