@@ -64,6 +64,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "goldy_storage"
+version = "0.1.0"
+dependencies = [
+ "nalgebra",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"

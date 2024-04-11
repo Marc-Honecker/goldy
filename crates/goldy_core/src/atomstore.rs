@@ -1,17 +1,17 @@
 use crate::{
     units::{Damping, Mass},
-    vector::{Position, Velocity},
+    vector::{Force, Position, Velocity},
     Real,
 };
 
-#[allow(unused)]
 pub struct AtomStore<T, const D: usize>
 where
     T: Real,
 {
     pos: Vec<Position<T, D>>,
     vel: Vec<Velocity<T, D>>,
-    id: Vec<usize>,
+    force: Vec<Force<T, D>>,
+    // id: Vec<usize>,
     mass: Mass<T>,
     damping: Damping<T>,
 }
@@ -34,5 +34,21 @@ where
 
     pub fn get_mut_velocities(&mut self) -> &mut Vec<Velocity<T, D>> {
         &mut self.vel
+    }
+
+    pub fn get_forces(&self) -> &Vec<Force<T, D>> {
+        &self.force
+    }
+
+    pub fn get_mut_forces(&mut self) -> &mut Vec<Force<T, D>> {
+        &mut self.force
+    }
+
+    pub fn get_mass(&self) -> &Mass<T> {
+        &self.mass
+    }
+
+    pub fn get_damping(&self) -> &Damping<T> {
+        &self.damping
     }
 }

@@ -7,6 +7,7 @@ pub mod error;
 pub mod force_eval;
 pub mod observer;
 pub mod potential;
+pub mod simulation_cell;
 pub mod thermostat;
 pub mod units;
 pub mod vector;
