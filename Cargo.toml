@@ -1,4 +1,4 @@
-workspace = { members = ["goldy_core"] }
+workspace = { members = ["crates/goldy_core", "crates/goldy_storage"] }
 
 [package]
 name = "goldy"
@@ -8,9 +8,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nalgebra = { version = "0.32.4" }
+nalgebra = { version = "0.32" }
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 rand_distr = "0.4.3"
 
-goldy_core = { path = "./goldy_core" }
+goldy_core = { path = "./crates/goldy_core" }
