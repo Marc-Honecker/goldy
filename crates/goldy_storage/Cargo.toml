@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 
 nalgebra = { version = "0.32" }
+uuid = { version = "1.8.0", features = ["v4", "macro-diagnostics"] }
