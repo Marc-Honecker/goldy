@@ -14,17 +14,18 @@ pub struct AtomType<T: Real> {
 }
 
 impl<T: Real> AtomType<T> {
-    /// Returns the mass of the atom.
+    /// Returns the mass of this atom-type.
     pub fn mass(&self) -> T {
         self.mass
     }
 
-    /// Returns the damping of the atom.
+    /// Returns the damping of this atom-type.
     /// Please note, that the damping is *not* rescaled by the time-step.
     pub fn damping(&self) -> T {
         self.damping
     }
 
+    /// Returns the ID of this atom-type.
     pub fn id(&self) -> Uuid {
         self.id
     }
