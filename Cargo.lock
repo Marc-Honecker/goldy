@@ -151,6 +151,10 @@ version = "0.1.0"
 dependencies = [
  "goldy_core",
  "goldy_storage",
+ "nalgebra",
+ "rand",
+ "rand_chacha",
+ "rand_distr",
 ]
 
 [[package]]
