@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn test_getter() {
+    fn test_atom_type_getter() {
         // Building a valide atom-type.
         let at = AtomTypeBuilder::default()
             .mass(39.95)
