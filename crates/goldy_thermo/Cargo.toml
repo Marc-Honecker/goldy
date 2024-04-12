@@ -1,0 +1,10 @@
+[package]
+name = "goldy_thermo"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+goldy_core = { path = "../goldy_core/" }
+goldy_storage = { path = "../goldy_storage/" }
