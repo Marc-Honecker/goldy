@@ -5,31 +5,31 @@ use crate::iterator::{Iter, IterMut};
 /// Holds all positions of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Positions<T, const D: usize> {
-    data: Vec<SVector<T, D>>,
+    pub(crate) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all rescaled positions of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScaledPositions<T, const D: usize> {
-    data: Vec<SVector<T, D>>,
+    pub(crate) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all velocities of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Velocities<T, const D: usize> {
-    data: Vec<SVector<T, D>>,
+    pub(crate) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all forces of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Forces<T, const D: usize> {
-    data: Vec<SVector<T, D>>,
+    pub(crate) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all accelerations of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Accelerations<T, const D: usize> {
-    data: Vec<SVector<T, D>>,
+    pub(crate) data: Vec<SVector<T, D>>,
 }
 
 impl<T, const D: usize> Positions<T, D> {}
