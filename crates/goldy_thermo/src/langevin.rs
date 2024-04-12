@@ -40,11 +40,11 @@ where
         dt: T,
     ) {
         f.iter_mut().zip(v).zip(types).for_each(|((f, v), ty)| {
-            *f -= v * ty.damping() / dt * ty.mass();
+            *f -= v * ty.gamma() / dt * ty.mass();
 
             let rand_vec = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
             *f += rand_vec
-                * ComplexField::sqrt(T::from(6).unwrap() * ty.mass() * ty.damping() / dt * temp);
+                * ComplexField::sqrt(T::from(6).unwrap() * ty.mass() * ty.gamma() / dt * temp);
         });
     }
 }

@@ -77,14 +77,14 @@ mod tests {
         // First, we create a proper Argon atom.
         let argon = AtomTypeBuilder::default()
             .mass(39.95)
-            .damping(0.01)
+            .gamma(0.01)
             .build()
             .unwrap();
 
         // Then, we create a Hydrogen atom.
         let hydrogen = AtomTypeBuilder::default()
             .mass(1.0)
-            .damping(0.005)
+            .gamma(0.005)
             .build()
             .unwrap();
 
@@ -98,7 +98,7 @@ mod tests {
         little_store.iter().for_each(|&at| {
             assert_eq!(at.id(), hydrogen.id());
             assert_eq!(at.mass(), hydrogen.mass());
-            assert_eq!(at.damping(), hydrogen.damping());
+            assert_eq!(at.gamma(), hydrogen.gamma());
         });
 
         // Now let's create a bigger AtomTypeStore with a bunch of Argon atoms.
@@ -112,7 +112,7 @@ mod tests {
         for at in &big_store {
             assert_eq!(at.id(), argon.id());
             assert_eq!(at.mass(), argon.mass());
-            assert_eq!(at.damping(), argon.damping());
+            assert_eq!(at.gamma(), argon.gamma());
         }
     }
 }
