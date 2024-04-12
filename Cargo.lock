@@ -146,6 +146,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "goldy_thermo"
+version = "0.1.0"
+dependencies = [
+ "goldy_core",
+ "goldy_storage",
+]
+
+[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
