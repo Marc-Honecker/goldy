@@ -2,7 +2,7 @@ use goldy_core::Real;
 
 use crate::{atom_type::AtomType, iterator::Iter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct AtomTypeStore<T: Real> {
     // The data-layout will most likely change!
     data: Vec<AtomType<T>>,

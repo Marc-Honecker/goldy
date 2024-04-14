@@ -1,0 +1,30 @@
+use goldy_core::Real;
+use nalgebra::SVector;
+use rand::SeedableRng;
+use rand_chacha::ChaChaRng;
+use rand_distr::{Distribution, Normal};
+
+use crate::vector::Positions;
+
+impl<T, const D: usize> Positions<T, D>
+where
+    T: Real,
+    rand_distr::StandardNormal: rand_distr::Distribution<T>,
+{
+    pub fn new_gaussian(n: usize, mean: T, std_dev: T) -> Self {
+        let mut rng = ChaChaRng::from_entropy();
+        let gauss = Normal::new(mean, std_dev).unwrap();
+
+        let x = (0..n)
+            .map(|_| SVector::from_iterator(gauss.sample_iter(&mut rng)))
+            .collect();
+
+        Self { data: x }
+    }
+
+    pub fn zero(n: usize) -> Self {
+        Self {
+            data: (0..n).map(|_| SVector::zeros()).collect(),
+        }
+    }
+}
