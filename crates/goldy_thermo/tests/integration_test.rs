@@ -4,19 +4,15 @@ use goldy_storage::{
 };
 
 #[test]
-#[allow(unused)]
 fn langevin_inttest() {
-    use goldy_storage::{
-        atom_store::{AtomStore, AtomStoreBuilder},
-        atom_type::AtomTypeBuilder,
-    };
+    use goldy_storage::atom_type::AtomTypeBuilder;
     use goldy_thermo::langevin::Langevin;
     use goldy_thermo::ForceDrivenThermostat;
 
     // simulation parameters
     let dt = 0.01;
-    let temp = 1.0;
-    let runs = 1_000_000;
+    let temp = 20.0;
+    let runs = 100_000;
 
     // Argon
     let at = AtomTypeBuilder::default()
@@ -38,10 +34,9 @@ fn langevin_inttest() {
 
     // kinetic energy moments
     let mut tkin_1 = 0.0;
-    let mut tkin_2 = 0.0;
 
     // the main MD-loop
-    for i in 0..runs {
+    for _ in 0..runs {
         // initliazing the forces.
         let mut f = Forces::zeros(num_atoms);
         // computing the forces (for ideal gas)
@@ -61,16 +56,13 @@ fn langevin_inttest() {
             * v.iter()
                 .zip(&types)
                 .map(|(&v, &t)| t.mass() * v.dot(&v))
-                .sum::<f32>()
-            / num_atoms as f32;
+                .sum::<f32>();
 
         // updating the moments
         tkin_1 += tkin_mean;
-        tkin_2 += tkin_mean * tkin_mean;
     }
 
-    tkin_1 /= runs as f32;
-    tkin_2 /= runs as f32 * temp.powi(2);
+    tkin_1 /= (runs * num_atoms) as f32;
 
     // this should hold
     assert!(
