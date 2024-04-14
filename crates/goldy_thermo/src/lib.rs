@@ -16,4 +16,3 @@ pub trait ForceDrivenThermostat<T: Real, const D: usize> {
         dt: T,
     );
 }
-

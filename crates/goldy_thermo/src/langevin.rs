@@ -1,4 +1,8 @@
 use goldy_core::Real;
+use goldy_storage::{
+    atom_type_store::AtomTypeStore,
+    vector::{Forces, Velocities},
+};
 use nalgebra::{ComplexField, SVector};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
@@ -33,18 +37,24 @@ where
 {
     fn thermo(
         &mut self,
-        f: &mut goldy_storage::vector::Forces<T, D>,
-        v: &goldy_storage::vector::Velocities<T, D>,
-        types: &goldy_storage::atom_type_store::AtomTypeStore<T>,
+        f: &mut Forces<T, D>,
+        v: &Velocities<T, D>,
+        types: &AtomTypeStore<T>,
         temp: T,
         dt: T,
     ) {
         f.iter_mut().zip(v).zip(types).for_each(|((f, v), ty)| {
-            *f -= v * ty.gamma() / dt * ty.mass();
+            // rescaling the damping
+            let dp = ty.mass() * ty.gamma() / dt * (T::from(1.0).unwrap() + ty.gamma());
 
+            // adding the non-iteracting forces
+            *f -= v * dp;
+
+            // Drawing the random vector.
             let rand_vec = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
-            *f += rand_vec
-                * ComplexField::sqrt(T::from(6).unwrap() * ty.mass() * ty.gamma() / dt * temp);
+
+            // adding the random forces
+            *f += rand_vec * ComplexField::sqrt(T::from(6).unwrap() * dp / dt * temp);
         });
     }
 }
@@ -98,7 +108,8 @@ mod tests {
         langevin.thermo(&mut f, &v, &types, temp, dt);
 
         // all forces must be in [-sqrt(6*m*gamma*T), sqrt(6*m*gamma*T)]
-        let bound = (6.0 * mass * gamma / dt * temp).sqrt();
+        let dp = mass * gamma / dt * (1.0 + gamma);
+        let bound = (6.0 * dp / dt * temp).sqrt();
         assert!(f
             .iter()
             .all(|f| f.iter().all(|x| (-bound..bound).contains(x))));
