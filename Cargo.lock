@@ -142,6 +142,9 @@ dependencies = [
  "derive_builder",
  "goldy_core",
  "nalgebra",
+ "rand",
+ "rand_chacha",
+ "rand_distr",
  "uuid",
 ]
 

@@ -6,6 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rand = "0.8"
+rand_chacha = "0.3"
+rand_distr = "0.4"
 derive_builder = "0.20"
 nalgebra = { version = "0.32" }
 uuid = { version = "1.8.0", features = ["v4", "macro-diagnostics"] }
