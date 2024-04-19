@@ -10,6 +10,7 @@ rand = "0.8"
 rand_chacha = "0.3"
 rand_distr = "0.4"
 nalgebra = { version = "0.32" }
+assert_approx_eq = "1"
 
 goldy_core = { path = "../goldy_core/" }
 goldy_storage = { path = "../goldy_storage/" }
