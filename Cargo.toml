@@ -1,4 +1,8 @@
-workspace = { members = ["./crates/goldy_core"] }
+workspace = { members = [
+  "crates/goldy_core",
+  "crates/goldy_storage",
+  "crates/goldy_thermo",
+] }
 
 [package]
 name = "goldy"
