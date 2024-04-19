@@ -44,8 +44,6 @@ where
         dt: T,
     ) {
         f.iter_mut().zip(v).zip(types).for_each(|((f, v), ty)| {
-            // rescaling the damping
-            let dp = ty.mass() * ty.gamma() / dt * (T::from(1.0).unwrap() + ty.gamma());
             // safety: T must be a number, so it's save to simply unwrap at this point.
             let dp = ty.mass() * ty.gamma() / dt * (T::from(1).unwrap() + ty.gamma());
 
