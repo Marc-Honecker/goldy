@@ -38,7 +38,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
                 d.norm_squared()
             }
             // Here, everything is normal.
-            _ => (x1 - x2).norm_squared(),
+            BoundaryTypes::Open => (x1 - x2).norm_squared(),
         }
     }
 
@@ -156,6 +156,7 @@ mod tests {
         assert_approx_eq!(open_sim_box.distance(&x1, &x2), 16.0);
         assert_approx_eq!(open_sim_box.distance(&x2, &x1), 16.0);
 
+        assert_approx_eq!(open_sim_box.sq_distance(&-x1, &(x2 * 2.0)), 1444.0);
         assert_approx_eq!(open_sim_box.sq_distance(&(x2 * 2.0), &-x1), 1444.0);
         assert_approx_eq!(open_sim_box.distance(&-x1, &(x2 * 2.0)), 38.0);
         assert_approx_eq!(open_sim_box.distance(&(x2 * 2.0), &-x1), 38.0);
