@@ -2,6 +2,7 @@ workspace = { members = [
   "crates/goldy_core",
   "crates/goldy_storage",
   "crates/goldy_thermo",
+  "crates/goldy_box/",
 ] }
 
 [package]
