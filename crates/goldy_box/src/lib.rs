@@ -101,7 +101,7 @@ impl<T: Real, const D: usize> SimulationBoxBuilder<T, D> {
 mod tests {
     use super::*;
 
-    use approx_eq::assert_approx_eq;
+    use assert_approx_eq::assert_approx_eq;
     use na::ComplexField;
 
     #[test]
