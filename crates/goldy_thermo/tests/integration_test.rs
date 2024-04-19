@@ -1,17 +1,18 @@
-use goldy_storage::{
-    atom_type_store::AtomTypeStoreBuilder,
-    vector::{Forces, Positions, Velocities},
-};
-
 #[test]
 fn langevin_inttest() {
+    use assert_approx_eq::assert_approx_eq;
+    use goldy_storage::{
+        atom_type_store::AtomTypeStoreBuilder,
+        vector::{Forces, Positions, Velocities},
+    };
+
     use goldy_storage::atom_type::AtomTypeBuilder;
     use goldy_thermo::langevin::Langevin;
     use goldy_thermo::ForceDrivenThermostat;
 
     // simulation parameters
     let dt = 0.01;
-    let temp = 20.0;
+    let temp = 1.0;
     let runs = 100_000;
 
     // Argon
@@ -65,9 +66,5 @@ fn langevin_inttest() {
     tkin_1 /= (runs * num_atoms) as f32;
 
     // this should hold
-    assert!(
-        (1.49 * temp..1.51 * temp).contains(&tkin_1),
-        "1. Kinetic energy moment should be {}, but was {tkin_1}",
-        1.5 * temp
-    );
+    assert_approx_eq!(1.5 * temp, tkin_1, 1e-2);
 }
