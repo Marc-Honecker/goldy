@@ -46,6 +46,8 @@ where
         f.iter_mut().zip(v).zip(types).for_each(|((f, v), ty)| {
             // rescaling the damping
             let dp = ty.mass() * ty.gamma() / dt * (T::from(1.0).unwrap() + ty.gamma());
+            // safety: T must be a number, so it's save to simply unwrap at this point.
+            let dp = ty.mass() * ty.gamma() / dt * (T::from(1).unwrap() + ty.gamma());
 
             // adding the non-iteracting forces
             *f -= v * dp;
@@ -54,6 +56,7 @@ where
             let rand_vec = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
 
             // adding the random forces
+            // safety: the same as above
             *f += rand_vec * ComplexField::sqrt(T::from(6).unwrap() * dp / dt * temp);
         });
     }
