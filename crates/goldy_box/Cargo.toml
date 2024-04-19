@@ -11,3 +11,4 @@ derive_builder = "0.20"
 
 goldy_core = { path = "../goldy_core/" }
 goldy_storage = { path = "../goldy_storage/" }
+approx_eq = "0.1"
