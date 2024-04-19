@@ -31,7 +31,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
                 // computing the difference
                 let mut d = x1 - x2;
 
-                // computing the "real" d
+                // computing the wrapped d
                 self.wrap_around(&mut d);
 
                 // we are done and return the squared norm
@@ -78,7 +78,9 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     #[inline]
     fn wrap_around(&self, x: &mut SVector<T, D>) {
         *x = self.to_relative(*x);
-        x.iter_mut().for_each(|x| *x -= na::ComplexField::floor(*x));
+        x.iter_mut().for_each(|x| {
+            *x -= na::ComplexField::round(*x);
+        });
         *x = self.to_real(*x);
     }
 }
@@ -98,6 +100,9 @@ impl<T: Real, const D: usize> SimulationBoxBuilder<T, D> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use approx_eq::assert_approx_eq;
+    use na::ComplexField;
 
     #[test]
     fn test_builder() {
@@ -131,5 +136,62 @@ mod tests {
             .build()
             // ... it must fail.
             .is_err());
+    }
+
+    #[test]
+    fn test_distance() {
+        // Let's create a simulation box with open boundaries...
+        let open_sim_box = SimulationBoxBuilder::<f64, 4>::default()
+            .hmatrix(SMatrix::from_diagonal_element(10.0))
+            .boundary_type(BoundaryTypes::Open)
+            .build()
+            .unwrap();
+
+        // ... and test it with positions inside of the box.
+        let x1 = SVector::<f64, 4>::from_iterator([1.0, 1.0, 1.0, 1.0]);
+        let x2 = SVector::<f64, 4>::from_iterator([9.0, 9.0, 9.0, 9.0]);
+
+        assert_approx_eq!(open_sim_box.sq_distance(&x1, &x2), 256.0);
+        assert_approx_eq!(open_sim_box.sq_distance(&x2, &x1), 256.0);
+        assert_approx_eq!(open_sim_box.distance(&x1, &x2), 16.0);
+        assert_approx_eq!(open_sim_box.distance(&x2, &x1), 16.0);
+
+        assert_approx_eq!(open_sim_box.sq_distance(&(x2 * 2.0), &-x1), 1444.0);
+        assert_approx_eq!(open_sim_box.distance(&-x1, &(x2 * 2.0)), 38.0);
+        assert_approx_eq!(open_sim_box.distance(&(x2 * 2.0), &-x1), 38.0);
+
+        // Now let's run the tests with periodic boundaries.
+        let periodic_sim_box = SimulationBoxBuilder::<f64, 2>::default()
+            .hmatrix(SMatrix::from_diagonal_element(15.0))
+            .boundary_type(BoundaryTypes::Periodic)
+            .build()
+            .unwrap();
+
+        // Setting up the positions (without wrapping around).
+        let x1 = SVector::<f64, 2>::zeros();
+        let x2 = SVector::<f64, 2>::from_iterator([5.0, 5.0]);
+
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 50.0);
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 50.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 50.0.sqrt());
+        assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 50.0.sqrt());
+
+        // Setting up positions, s.t. periodic boundaries kick in.
+        let x1 = SVector::<f64, 2>::from_iterator([1.0, 14.0]);
+        let x2 = SVector::<f64, 2>::from_iterator([14.0, 1.0]);
+
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 8.0);
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 8.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 8.0.sqrt());
+        assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 8.0.sqrt());
+
+        // The implementation should also work for positions which are far outside.
+        let x1 = SVector::<f64, 2>::from_iterator([-45.0, -45.0]);
+        let x2 = SVector::<f64, 2>::from_iterator([45.0, 45.0]);
+
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 0.0);
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 0.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 0.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 0.0);
     }
 }
