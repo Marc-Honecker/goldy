@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn test_harmonic_oscillator_with_one_atom() {
         // let's spawn one at [0,0,0]
-        let mut x = Positions::<f32, 3>::zero(1);
+        let mut x = Positions::<f32, 3>::zeros(1);
         let mut v = Velocities::<f32, 3>::zeros(1);
         // The SimulationBox and the atom-types don't matter here, but
         // we still need to define them.
