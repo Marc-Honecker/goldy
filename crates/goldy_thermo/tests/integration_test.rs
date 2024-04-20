@@ -1,5 +1,5 @@
 #[test]
-fn langevin_inttest() {
+fn ideal_gas() {
     use assert_approx_eq::assert_approx_eq;
     use goldy_storage::{
         atom_type_store::AtomTypeStoreBuilder,
