@@ -131,12 +131,13 @@ mod tests {
             .build()
             .unwrap();
         let atom_types = AtomTypeStoreBuilder::default()
-            .add(
+            .add_many(
                 AtomTypeBuilder::default()
                     .mass(1.0)
                     .gamma(0.01)
                     .build()
                     .unwrap(),
+                num_atoms,
             )
             .build();
 
@@ -163,6 +164,6 @@ mod tests {
             x.iter_mut().zip(&v).for_each(|(x, &v)| *x += v * dt);
         }
 
-        assert_approx_eq!(pot_energy / (runs * num_atoms) as f32, 0.75, 1.0);
+        assert_approx_eq!(pot_energy / (runs * num_atoms) as f32, 0.75, 5e-2);
     }
 }
