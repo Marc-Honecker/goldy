@@ -20,3 +20,7 @@ rand_chacha = "0.3.1"
 rand_distr = "0.4.3"
 
 goldy_core = { path = "./crates/goldy_core" }
+goldy_storage = { path = "./crates/goldy_storage" }
+goldy_box = { path = "./crates/goldy_box/" }
+goldy_thermo = { path = "./crates/goldy_thermo/" }
+goldy_potential = { path = "./crates/goldy_potential/" }
