@@ -11,3 +11,7 @@ derive_builder = "0.20"
 goldy_storage = { path = "../goldy_storage/" }
 goldy_core = { path = "../goldy_core/" }
 goldy_box = { path = "../goldy_box/" }
+
+[dev-dependencies]
+assert_approx_eq = "1"
+nalgebra = "0.32"
