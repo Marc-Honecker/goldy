@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use goldy_box::{BoundaryTypes, SimulationBoxBuilder};
 use goldy_potential::{harmonic_oscillator::HarmonicOscillatorBuilder, Potential};
 use goldy_storage::{
+    atom_store::AtomStoreBuilder,
     atom_type::AtomTypeBuilder,
     atom_type_store::AtomTypeStoreBuilder,
     vector::{Forces, Positions, Velocities},
@@ -15,8 +16,27 @@ fn main() {
     let num_atoms = 10_000;
 
     // Let's spawn them at random positions.
-    let mut x = Positions::<f32, 3>::new_gaussian(num_atoms, 0.0, 1.0);
-    let mut v = Velocities::<f32, 3>::zeros(num_atoms);
+    let x = Positions::<f32, 3>::new_gaussian(num_atoms, 0.0, 1.0);
+    let v = Velocities::<f32, 3>::zeros(num_atoms);
+    let f = Forces::<f32, 3>::zeros(num_atoms);
+    let atom_types = AtomTypeStoreBuilder::default()
+        .add_many(
+            AtomTypeBuilder::default()
+                .mass(1.0)
+                .gamma(0.01)
+                .build()
+                .unwrap(),
+            num_atoms,
+        )
+        .build();
+
+    let mut atom_store = AtomStoreBuilder::default()
+        .positions(x)
+        .velocities(v)
+        .forces(f)
+        .atom_types(atom_types)
+        .build()
+        .unwrap();
 
     // the md parameters
     let runs = 100_000;
@@ -30,16 +50,6 @@ fn main() {
         .boundary_type(BoundaryTypes::Open)
         .build()
         .unwrap();
-    let atom_types = AtomTypeStoreBuilder::default()
-        .add_many(
-            AtomTypeBuilder::default()
-                .mass(1.0)
-                .gamma(0.01)
-                .build()
-                .unwrap(),
-            num_atoms,
-        )
-        .build();
 
     // defining the potential
     let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
@@ -55,23 +65,44 @@ fn main() {
     // the main MD-loop
     for _ in 0..runs {
         // initializing the forces
-        let mut f = Forces::<f32, 3>::zeros(num_atoms);
         // computing the Forces
-        pot_energy += potential.eval(&x, &mut f, &sim_box, &atom_types);
+        pot_energy += potential.eval(
+            &atom_store.x,
+            &mut atom_store.f,
+            &sim_box,
+            &atom_store.atom_types,
+        );
         // adding non-deterministic forces
-        langevin.thermo(&mut f, &v, &atom_types, temp, dt);
+        langevin.thermo(
+            &mut atom_store.f,
+            &atom_store.v,
+            &atom_store.atom_types,
+            temp,
+            dt,
+        );
 
         // stepping forward in time
-        f.iter_mut()
-            .zip(&atom_types)
+        atom_store
+            .f
+            .iter_mut()
+            .zip(&atom_store.atom_types)
             .for_each(|(f, at)| *f /= at.mass());
-        v.iter_mut().zip(&f).for_each(|(v, &f)| *v += f * dt);
-        x.iter_mut().zip(&v).for_each(|(x, &v)| *x += v * dt);
+        atom_store
+            .v
+            .iter_mut()
+            .zip(&atom_store.f)
+            .for_each(|(v, &f)| *v += f * dt);
+        atom_store
+            .x
+            .iter_mut()
+            .zip(&atom_store.v)
+            .for_each(|(x, &v)| *x += v * dt);
 
         // updating kinetic energy
-        kin_energy += v
+        kin_energy += atom_store
+            .v
             .iter()
-            .zip(&atom_types)
+            .zip(&atom_store.atom_types)
             .map(|(v, at)| v.dot(v) * at.mass())
             .sum::<f32>();
     }
