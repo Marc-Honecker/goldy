@@ -5,7 +5,7 @@ use crate::{atom_type::AtomType, iterator::Iter};
 #[derive(Debug, Default, Clone)]
 pub struct AtomTypeStore<T: Real> {
     // The data-layout will most likely change!
-    data: Vec<AtomType<T>>,
+    pub(crate) data: Vec<AtomType<T>>,
 }
 
 impl<T: Real> AtomTypeStore<T> {
