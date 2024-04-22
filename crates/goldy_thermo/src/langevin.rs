@@ -47,7 +47,7 @@ where
             // precomputing a constant
             let dp = ty.mass() * ty.damping() / dt * (T::one() + ty.damping());
 
-            // adding the non-iteracting forces
+            // adding the deterministic forces
             *f -= v * dp;
 
             // Drawing the random vector.
