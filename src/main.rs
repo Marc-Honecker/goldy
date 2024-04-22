@@ -23,7 +23,7 @@ fn main() {
         .add_many(
             AtomTypeBuilder::default()
                 .mass(1.0)
-                .gamma(0.01)
+                .damping(0.01)
                 .build()
                 .unwrap(),
             num_atoms,
@@ -39,7 +39,7 @@ fn main() {
         .unwrap();
 
     // the md parameters
-    let runs = 100_000;
+    let runs = 1_000_000;
     let dt = 2.0 * PI / 80.0;
     let temp = 1.0;
 
@@ -55,7 +55,7 @@ fn main() {
     let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
 
     // defining the thermostat
-    let mut langevin = Langevin::<f32>::new();
+    let mut langevin = Langevin::new();
 
     // the potential energy
     let mut pot_energy = 0.0;

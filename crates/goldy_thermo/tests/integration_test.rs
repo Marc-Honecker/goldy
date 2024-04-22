@@ -12,12 +12,12 @@ fn ideal_gas() {
 
     // simulation parameters
     let dt = 0.01;
-    let temp = 1.0;
-    let runs = 100_000;
+    let temp = 70.0;
+    let runs = 200_000;
 
     // Argon
     let at = AtomTypeBuilder::default()
-        .gamma(0.01)
+        .damping(0.005)
         .mass(39.95)
         .build()
         .unwrap();
@@ -26,6 +26,7 @@ fn ideal_gas() {
     let num_atoms = 1_000;
     let mut x = Positions::<f32, 3>::new_gaussian(num_atoms, 0.0, 1.0);
     let mut v = Velocities::zeros(num_atoms);
+    let mut f = Forces::zeros(num_atoms);
     let types = AtomTypeStoreBuilder::default()
         .add_many(at, num_atoms)
         .build();
@@ -38,8 +39,6 @@ fn ideal_gas() {
 
     // the main MD-loop
     for _ in 0..runs {
-        // initliazing the forces.
-        let mut f = Forces::zeros(num_atoms);
         // computing the forces (for ideal gas)
         langevin.thermo(&mut f, &v, &types, temp, dt);
 
@@ -59,6 +58,9 @@ fn ideal_gas() {
                 .map(|(&v, &t)| t.mass() * v.dot(&v))
                 .sum::<f32>();
 
+        // initliazing the forces.
+        f.set_to_zero();
+
         // updating the moments
         tkin_1 += tkin_mean;
     }
@@ -66,5 +68,6 @@ fn ideal_gas() {
     tkin_1 /= (runs * num_atoms) as f32;
 
     // this should hold
-    assert_approx_eq!(1.5 * temp, tkin_1, 1e-2);
+    let analytical_solution = 1.5 * temp;
+    assert_approx_eq!(analytical_solution, tkin_1, 5e-3 * analytical_solution);
 }

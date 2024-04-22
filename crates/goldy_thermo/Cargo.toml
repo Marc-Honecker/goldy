@@ -14,3 +14,4 @@ assert_approx_eq = "1"
 
 goldy_core = { path = "../goldy_core/" }
 goldy_storage = { path = "../goldy_storage/" }
+rand_xoshiro = "0.6.0"

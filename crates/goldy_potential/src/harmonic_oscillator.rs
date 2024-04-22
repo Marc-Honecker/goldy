@@ -82,7 +82,7 @@ mod tests {
             .add(
                 AtomTypeBuilder::default()
                     .mass(39.95)
-                    .gamma(0.01)
+                    .damping(0.01)
                     .build()
                     .unwrap(),
             )
@@ -134,7 +134,7 @@ mod tests {
             .add_many(
                 AtomTypeBuilder::default()
                     .mass(1.0)
-                    .gamma(0.01)
+                    .damping(0.01)
                     .build()
                     .unwrap(),
                 num_atoms,
