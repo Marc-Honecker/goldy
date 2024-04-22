@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use goldy_box::{BoundaryTypes, SimulationBoxBuilder};
 use goldy_potential::harmonic_oscillator::HarmonicOscillatorBuilder;
-use goldy_propagator::{euler::Euler, Propagator};
+use goldy_propagator::{velocity_verlet::VelocityVerlet, Propagator};
 use goldy_storage::{
     atom_store::AtomStoreBuilder,
     atom_type::AtomTypeBuilder,
@@ -40,7 +40,7 @@ fn main() {
         .unwrap();
 
     // the md parameters
-    let runs = 100_000;
+    let runs = 500_000;
     let dt = 2.0 * PI / 80.0;
     let temp = 1.0;
 
@@ -65,7 +65,7 @@ fn main() {
 
     // the main MD-loop
     for _ in 0..runs {
-        pot_energy += Euler::integrate(
+        pot_energy += VelocityVerlet::integrate(
             &mut atom_store,
             &sim_box,
             Some(&potential),
