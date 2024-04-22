@@ -11,3 +11,7 @@ goldy_storage = { path = "../goldy_storage/" }
 goldy_potential = { path = "../goldy_potential/" }
 goldy_core = { path = "../goldy_core/" }
 goldy_box = { path = "../goldy_box/" }
+
+[dev-dependencies]
+nalgebra = "0.32"
+assert_approx_eq = "1"
