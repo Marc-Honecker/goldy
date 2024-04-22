@@ -5,6 +5,7 @@ use goldy_storage::atom_store::AtomStore;
 use goldy_thermo::ForceDrivenThermostat;
 
 pub mod euler;
+pub mod velocity_verlet;
 
 pub trait Propagator {
     /// Propagates a system in time and returns the accumulated potential-energy,
