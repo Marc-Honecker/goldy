@@ -1,19 +1,20 @@
 use std::f32::consts::PI;
 
 use goldy_box::{BoundaryTypes, SimulationBoxBuilder};
-use goldy_potential::{harmonic_oscillator::HarmonicOscillatorBuilder, Potential};
+use goldy_potential::harmonic_oscillator::HarmonicOscillatorBuilder;
+use goldy_propagator::{euler::Euler, Propagator};
 use goldy_storage::{
     atom_store::AtomStoreBuilder,
     atom_type::AtomTypeBuilder,
     atom_type_store::AtomTypeStoreBuilder,
     vector::{Forces, Positions, Velocities},
 };
-use goldy_thermo::{langevin::Langevin, ForceDrivenThermostat};
+use goldy_thermo::langevin::Langevin;
 use nalgebra::Matrix3;
 
 fn main() {
     // Let's spawn many atoms.
-    let num_atoms = 10_000;
+    let num_atoms = 1_000;
 
     // Let's spawn them at random positions.
     let x = Positions::<f32, 3>::new_gaussian(num_atoms, 0.0, 1.0);
@@ -39,7 +40,7 @@ fn main() {
         .unwrap();
 
     // the md parameters
-    let runs = 1_000_000;
+    let runs = 100_000;
     let dt = 2.0 * PI / 80.0;
     let temp = 1.0;
 
@@ -64,39 +65,15 @@ fn main() {
 
     // the main MD-loop
     for _ in 0..runs {
-        // initializing the forces
-        // computing the Forces
-        pot_energy += potential.eval(
-            &atom_store.x,
-            &mut atom_store.f,
+        pot_energy += Euler::integrate(
+            &mut atom_store,
             &sim_box,
-            &atom_store.atom_types,
-        );
-        // adding non-deterministic forces
-        langevin.thermo(
-            &mut atom_store.f,
-            &atom_store.v,
-            &atom_store.atom_types,
-            temp,
+            Some(&potential),
+            Some(&mut langevin),
             dt,
-        );
-
-        // stepping forward in time
-        atom_store
-            .f
-            .iter_mut()
-            .zip(&atom_store.atom_types)
-            .for_each(|(f, at)| *f /= at.mass());
-        atom_store
-            .v
-            .iter_mut()
-            .zip(&atom_store.f)
-            .for_each(|(v, &f)| *v += f * dt);
-        atom_store
-            .x
-            .iter_mut()
-            .zip(&atom_store.v)
-            .for_each(|(x, &v)| *x += v * dt);
+            temp,
+        )
+        .unwrap();
 
         // updating kinetic energy
         kin_energy += atom_store

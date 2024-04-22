@@ -4,6 +4,7 @@ workspace = { members = [
   "crates/goldy_thermo",
   "crates/goldy_box/",
   "crates/goldy_potential",
+  "crates/goldy_propagator",
 ] }
 
 [package]
@@ -24,3 +25,4 @@ goldy_storage = { path = "./crates/goldy_storage" }
 goldy_box = { path = "./crates/goldy_box/" }
 goldy_thermo = { path = "./crates/goldy_thermo/" }
 goldy_potential = { path = "./crates/goldy_potential/" }
+goldy_propagator = { path = "./crates/goldy_propagator/" }
