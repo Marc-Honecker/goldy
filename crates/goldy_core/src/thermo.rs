@@ -1,7 +1,9 @@
-use goldy_core::Real;
-use goldy_storage::{
-    atom_type_store::AtomTypeStore,
-    vector::{Forces, Velocities},
+use crate::{
+    storage::{
+        atom_type_store::AtomTypeStore,
+        vector::{Forces, Velocities},
+    },
+    Real,
 };
 
 pub mod langevin;

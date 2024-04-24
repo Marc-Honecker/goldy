@@ -1,35 +1,35 @@
 use nalgebra::SVector;
 
-use crate::iterator::{Iter, IterMut};
+use crate::storage::iterator::{Iter, IterMut};
 
 /// Holds all positions of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Positions<T, const D: usize> {
-    pub(crate) data: Vec<SVector<T, D>>,
+    pub(super) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all rescaled positions of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScaledPositions<T, const D: usize> {
-    pub(crate) data: Vec<SVector<T, D>>,
+    pub(super) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all velocities of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Velocities<T, const D: usize> {
-    pub(crate) data: Vec<SVector<T, D>>,
+    pub(super) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all forces of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Forces<T, const D: usize> {
-    pub(crate) data: Vec<SVector<T, D>>,
+    pub(super) data: Vec<SVector<T, D>>,
 }
 
 /// Holds all accelerations of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Accelerations<T, const D: usize> {
-    pub(crate) data: Vec<SVector<T, D>>,
+    pub(super) data: Vec<SVector<T, D>>,
 }
 
 impl<T, const D: usize> Positions<T, D> {}
@@ -60,7 +60,7 @@ macro_rules! generate_iterators {
 
         impl<'a, T, const D: usize> IntoIterator for &'a $type_name<T, D> {
             type Item = &'a SVector<T, D>;
-            type IntoIter = crate::iterator::Iter<'a, SVector<T, D>>;
+            type IntoIter = crate::storage::iterator::Iter<'a, SVector<T, D>>;
 
             fn into_iter(self) -> Self::IntoIter {
                 self.iter()
@@ -69,7 +69,7 @@ macro_rules! generate_iterators {
 
         impl<'a, T, const D: usize> IntoIterator for &'a mut $type_name<T, D> {
             type Item = &'a mut SVector<T, D>;
-            type IntoIter = crate::iterator::IterMut<'a, SVector<T, D>>;
+            type IntoIter = crate::storage::iterator::IterMut<'a, SVector<T, D>>;
 
             fn into_iter(self) -> Self::IntoIter {
                 self.iter_mut()

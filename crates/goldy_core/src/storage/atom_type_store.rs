@@ -1,11 +1,12 @@
-use goldy_core::Real;
-
-use crate::{atom_type::AtomType, iterator::Iter};
+use crate::{
+    storage::{atom_type::AtomType, iterator::Iter},
+    Real,
+};
 
 #[derive(Debug, Default, Clone)]
 pub struct AtomTypeStore<T: Real> {
     // The data-layout will most likely change!
-    pub(crate) data: Vec<AtomType<T>>,
+    pub(super) data: Vec<AtomType<T>>,
 }
 
 impl<T: Real> AtomTypeStore<T> {
@@ -26,7 +27,7 @@ impl<T: Real> IntoIterator for AtomTypeStore<T> {
 
 impl<'a, T: Real> IntoIterator for &'a AtomTypeStore<T> {
     type Item = &'a AtomType<T>;
-    type IntoIter = crate::iterator::Iter<'a, AtomType<T>>;
+    type IntoIter = crate::storage::iterator::Iter<'a, AtomType<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -68,7 +69,7 @@ impl<T: Real> AtomTypeStoreBuilder<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::atom_type::AtomTypeBuilder;
+    use crate::storage::atom_type::AtomTypeBuilder;
 
     use super::*;
 

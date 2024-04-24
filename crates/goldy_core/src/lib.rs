@@ -3,6 +3,12 @@ use nalgebra::RealField;
 use num_traits::Float;
 
 pub mod error;
+pub mod force_update;
+pub mod potential;
+pub mod propagator;
+pub mod simulation_box;
+pub mod storage;
+pub mod thermo;
 
 pub type Result<T> = std::result::Result<T, GoldyError>;
 

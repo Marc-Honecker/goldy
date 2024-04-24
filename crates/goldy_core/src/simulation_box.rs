@@ -1,9 +1,8 @@
 use derive_builder::Builder;
 use nalgebra as na;
-
-use goldy_core::Real;
-use goldy_storage::vector::Positions;
 use nalgebra::{SMatrix, SVector};
+
+use crate::{storage::vector::Positions, Real};
 
 #[derive(Debug, Builder, PartialEq, Eq)]
 pub struct SimulationBox<T: Real, const D: usize> {

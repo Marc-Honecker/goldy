@@ -1,8 +1,10 @@
-use goldy_box::SimulationBox;
-use goldy_core::Real;
-use goldy_storage::{
-    atom_type_store::AtomTypeStore,
-    vector::{Forces, Positions},
+use crate::{
+    simulation_box::SimulationBox,
+    storage::{
+        atom_type_store::AtomTypeStore,
+        vector::{Forces, Positions},
+    },
+    Real,
 };
 
 pub mod harmonic_oscillator;

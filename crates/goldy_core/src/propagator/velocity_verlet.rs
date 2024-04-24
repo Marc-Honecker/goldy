@@ -1,20 +1,23 @@
-use crate::Propagator;
+use crate::{
+    potential::Potential, propagator::Propagator, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore, thermo::ForceDrivenThermostat, Real,
+};
 
 pub struct VelocityVerlet;
 
 impl Propagator for VelocityVerlet {
     fn integrate<T, const D: usize, Pot, FDT>(
-        atom_store: &mut goldy_storage::atom_store::AtomStore<T, D>,
-        sim_box: &goldy_box::SimulationBox<T, D>,
+        atom_store: &mut AtomStore<T, D>,
+        sim_box: &SimulationBox<T, D>,
         potential: Option<&Pot>,
         thermostat: Option<&mut FDT>,
         dt: T,
         temp: T,
     ) -> Option<T>
     where
-        T: goldy_core::Real,
-        Pot: goldy_potential::Potential<T, D>,
-        FDT: goldy_thermo::ForceDrivenThermostat<T, D>,
+        T: Real,
+        Pot: Potential<T, D>,
+        FDT: ForceDrivenThermostat<T, D>,
     {
         // First, we need to update the velocities half a timestep.
         atom_store

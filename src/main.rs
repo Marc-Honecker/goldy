@@ -1,16 +1,18 @@
+use nalgebra::Matrix3;
 use std::f32::consts::PI;
 
-use goldy_box::{BoundaryTypes, SimulationBoxBuilder};
-use goldy_potential::harmonic_oscillator::HarmonicOscillatorBuilder;
-use goldy_propagator::{velocity_verlet::VelocityVerlet, Propagator};
-use goldy_storage::{
-    atom_store::AtomStoreBuilder,
-    atom_type::AtomTypeBuilder,
-    atom_type_store::AtomTypeStoreBuilder,
-    vector::{Forces, Positions, Velocities},
+use goldy_core::{
+    potential::harmonic_oscillator::HarmonicOscillatorBuilder,
+    propagator::{velocity_verlet::VelocityVerlet, Propagator},
+    simulation_box::{BoundaryTypes, SimulationBoxBuilder},
+    storage::{
+        atom_store::AtomStoreBuilder,
+        atom_type::AtomTypeBuilder,
+        atom_type_store::AtomTypeStoreBuilder,
+        vector::{Forces, Positions, Velocities},
+    },
+    thermo::langevin::Langevin,
 };
-use goldy_thermo::langevin::Langevin;
-use nalgebra::Matrix3;
 
 fn main() {
     // Let's spawn many atoms.

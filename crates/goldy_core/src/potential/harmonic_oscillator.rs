@@ -1,12 +1,14 @@
 use derive_builder::Builder;
-use goldy_box::SimulationBox;
-use goldy_core::Real;
-use goldy_storage::{
-    atom_type_store::AtomTypeStore,
-    vector::{Forces, Positions},
-};
 
-use crate::Potential;
+use crate::{
+    potential::Potential,
+    simulation_box::SimulationBox,
+    storage::{
+        atom_type_store::AtomTypeStore,
+        vector::{Forces, Positions},
+    },
+    Real,
+};
 
 #[derive(Debug, Builder)]
 #[builder(build_fn(validate = "Self::validate"))]
@@ -59,9 +61,11 @@ mod tests {
     use assert_approx_eq::assert_approx_eq;
     use nalgebra::Matrix3;
 
-    use goldy_box::{BoundaryTypes, SimulationBoxBuilder};
-    use goldy_storage::{
-        atom_type::AtomTypeBuilder, atom_type_store::AtomTypeStoreBuilder, vector::Velocities,
+    use crate::{
+        simulation_box::{BoundaryTypes, SimulationBoxBuilder},
+        storage::{
+            atom_type::AtomTypeBuilder, atom_type_store::AtomTypeStoreBuilder, vector::Velocities,
+        },
     };
 
     use super::*;

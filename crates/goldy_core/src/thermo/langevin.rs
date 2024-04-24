@@ -1,14 +1,16 @@
-use goldy_core::Real;
-use goldy_storage::{
-    atom_type_store::AtomTypeStore,
-    vector::{Forces, Velocities},
-};
 use nalgebra::{ComplexField, SVector};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{uniform::SampleUniform, Distribution, Uniform};
 
-use crate::ForceDrivenThermostat;
+use crate::{
+    storage::{
+        atom_type_store::AtomTypeStore,
+        vector::{Forces, Velocities},
+    },
+    thermo::ForceDrivenThermostat,
+    Real,
+};
 
 pub struct Langevin<T>
 where
@@ -71,7 +73,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use goldy_storage::{
+    use crate::storage::{
         atom_type::AtomTypeBuilder,
         atom_type_store::AtomTypeStoreBuilder,
         vector::{Forces, Velocities},

@@ -1,6 +1,7 @@
 use derive_builder::Builder;
-use goldy_core::Real;
 use uuid::Uuid;
+
+use crate::Real;
 
 #[derive(Debug, Hash, Clone, Copy, PartialEq, Eq, Builder)]
 #[builder(build_fn(validate = "Self::validate"))]

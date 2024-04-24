@@ -1,10 +1,9 @@
-use goldy_core::Real;
 use nalgebra::SVector;
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::vector::Positions;
+use crate::{storage::vector::Positions, Real};
 
 impl<T, const D: usize> Positions<T, D>
 where

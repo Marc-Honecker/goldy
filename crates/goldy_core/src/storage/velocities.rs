@@ -1,7 +1,6 @@
-use goldy_core::Real;
 use nalgebra::SVector;
 
-use crate::vector::Velocities;
+use crate::{storage::vector::Velocities, Real};
 
 impl<T: Real, const D: usize> Velocities<T, D> {
     pub fn zeros(n: usize) -> Self {

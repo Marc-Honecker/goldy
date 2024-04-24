@@ -1,14 +1,12 @@
-use goldy_core::Real;
-
-use crate::Propagator;
+use crate::{propagator::Propagator, Real};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Euler;
 
 impl Propagator for Euler {
     fn integrate<T, const D: usize, Pot, FDT>(
-        atom_store: &mut goldy_storage::atom_store::AtomStore<T, D>,
-        sim_box: &goldy_box::SimulationBox<T, D>,
+        atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
+        sim_box: &crate::simulation_box::SimulationBox<T, D>,
         potential: Option<&Pot>,
         thermostat: Option<&mut FDT>,
         dt: T,
@@ -16,8 +14,8 @@ impl Propagator for Euler {
     ) -> Option<T>
     where
         T: Real,
-        Pot: goldy_potential::Potential<T, D>,
-        FDT: goldy_thermo::ForceDrivenThermostat<T, D>,
+        Pot: crate::potential::Potential<T, D>,
+        FDT: crate::thermo::ForceDrivenThermostat<T, D>,
     {
         // initalizing the forces
         atom_store.f.set_to_zero();
@@ -68,16 +66,19 @@ impl Propagator for Euler {
 
 #[cfg(test)]
 mod tests {
-    use assert_approx_eq::assert_approx_eq;
-    use goldy_box::SimulationBoxBuilder;
-    use goldy_potential::harmonic_oscillator::HarmonicOscillator;
-    use goldy_storage::{
-        atom_store::{AtomStore, AtomStoreBuilder},
-        atom_type::AtomTypeBuilder,
-        atom_type_store::AtomTypeStoreBuilder,
-        vector::{Forces, Positions, Velocities},
+    use crate::{
+        potential::harmonic_oscillator::HarmonicOscillator,
+        simulation_box::{BoundaryTypes, SimulationBoxBuilder},
+        storage::{
+            atom_store::{AtomStore, AtomStoreBuilder},
+            atom_type::AtomTypeBuilder,
+            atom_type_store::AtomTypeStoreBuilder,
+            vector::{Forces, Positions, Velocities},
+        },
+        thermo::langevin::Langevin,
     };
-    use goldy_thermo::langevin::Langevin;
+
+    use assert_approx_eq::assert_approx_eq;
     use nalgebra::Matrix3;
 
     use super::*;
@@ -107,7 +108,7 @@ mod tests {
         // doesn't do anything, but we need it
         let sim_box = SimulationBoxBuilder::default()
             .hmatrix(Matrix3::from_diagonal_element(10.0))
-            .boundary_type(goldy_box::BoundaryTypes::Open)
+            .boundary_type(BoundaryTypes::Open)
             .build()
             .unwrap();
 

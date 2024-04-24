@@ -1,8 +1,7 @@
-use goldy_box::SimulationBox;
-use goldy_core::Real;
-use goldy_potential::Potential;
-use goldy_storage::atom_store::AtomStore;
-use goldy_thermo::ForceDrivenThermostat;
+use crate::{
+    potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
+    thermo::ForceDrivenThermostat, Real,
+};
 
 pub mod euler;
 pub mod velocity_verlet;

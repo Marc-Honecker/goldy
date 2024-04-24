@@ -1,9 +1,11 @@
 use derive_builder::Builder;
-use goldy_core::Real;
 
 use crate::{
-    atom_type_store::AtomTypeStore,
-    vector::{Forces, Positions, Velocities},
+    storage::{
+        atom_type_store::AtomTypeStore,
+        vector::{Forces, Positions, Velocities},
+    },
+    Real,
 };
 
 #[derive(Debug, Clone, Builder)]
@@ -85,7 +87,7 @@ impl<T: Real, const D: usize> AtomStoreBuilder<T, D> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{atom_type::AtomTypeBuilder, atom_type_store::AtomTypeStoreBuilder};
+    use crate::storage::{atom_type::AtomTypeBuilder, atom_type_store::AtomTypeStoreBuilder};
 
     use super::*;
 

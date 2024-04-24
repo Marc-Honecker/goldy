@@ -12,3 +12,8 @@ rand_chacha = "0.3"
 rand_distr = "0.4"
 num-traits = "0.2"
 thiserror = "1"
+derive_builder = "0.20"
+uuid = { version = "1", features = ["v4", "macro-diagnostics"] }
+
+[dev-dependencies]
+assert_approx_eq = "1"
