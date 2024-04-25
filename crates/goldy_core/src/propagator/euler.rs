@@ -1,46 +1,18 @@
-use crate::{propagator::Propagator, Real};
+use crate::{force_update::ForceUpdate, propagator::Propagator, Real};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Euler;
 
 impl Propagator for Euler {
-    fn integrate<T, const D: usize, Pot, FDT>(
+    fn integrate<T: Real, const D: usize>(
         atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
         sim_box: &crate::simulation_box::SimulationBox<T, D>,
-        potential: Option<&Pot>,
-        thermostat: Option<&mut FDT>,
+        updater: &mut ForceUpdate<T, D>,
         dt: T,
         temp: T,
-    ) -> Option<T>
-    where
-        T: Real,
-        Pot: crate::potential::Potential<T, D>,
-        FDT: crate::thermo::ForceDrivenThermostat<T, D>,
-    {
-        // initalizing the forces
-        atom_store.f.set_to_zero();
-
-        // evaluating the potential if present
-        let potential_energy = match potential {
-            Some(pot) => Some(pot.eval(
-                &atom_store.x,
-                &mut atom_store.f,
-                sim_box,
-                &atom_store.atom_types,
-            )),
-            None => None,
-        };
-
-        // evaluating the thermostat if present.
-        if let Some(thermostat) = thermostat {
-            thermostat.thermo(
-                &mut atom_store.f,
-                &atom_store.v,
-                &atom_store.atom_types,
-                temp,
-                dt,
-            );
-        }
+    ) -> Option<T> {
+        // updating the forces
+        let potential_energy = updater.update_forces(atom_store, sim_box, temp, dt);
 
         // The force computation is completed and we can update the rest.
         // Updating the velocities.
@@ -67,7 +39,6 @@ impl Propagator for Euler {
 #[cfg(test)]
 mod tests {
     use crate::{
-        potential::harmonic_oscillator::HarmonicOscillator,
         simulation_box::{BoundaryTypes, SimulationBoxBuilder},
         storage::{
             atom_store::{AtomStore, AtomStoreBuilder},
@@ -75,7 +46,6 @@ mod tests {
             atom_type_store::AtomTypeStoreBuilder,
             vector::{Forces, Positions, Velocities},
         },
-        thermo::langevin::Langevin,
     };
 
     use assert_approx_eq::assert_approx_eq;
@@ -113,11 +83,10 @@ mod tests {
             .unwrap();
 
         // propating one step
-        let potential_energy = Euler::integrate::<f32, 3, HarmonicOscillator<f32>, Langevin<f32>>(
+        let potential_energy = Euler::integrate::<f32, 3>(
             &mut atom_store,
             &sim_box,
-            None,
-            None,
+            &mut ForceUpdate::new(),
             0.01,
             1.0,
         );

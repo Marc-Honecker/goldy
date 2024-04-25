@@ -2,6 +2,7 @@ use nalgebra::Matrix3;
 use std::f32::consts::PI;
 
 use goldy_core::{
+    force_update::ForceUpdateBuilder,
     potential::harmonic_oscillator::HarmonicOscillatorBuilder,
     propagator::{velocity_verlet::VelocityVerlet, Propagator},
     simulation_box::{BoundaryTypes, SimulationBoxBuilder},
@@ -58,7 +59,12 @@ fn main() {
     let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
 
     // defining the thermostat
-    let mut langevin = Langevin::new();
+    let langevin = Langevin::new();
+
+    let mut updater = ForceUpdateBuilder::default()
+        .thermostat(Box::new(langevin))
+        .potential(Box::new(potential))
+        .build();
 
     // the potential energy
     let mut pot_energy = 0.0;
@@ -67,15 +73,8 @@ fn main() {
 
     // the main MD-loop
     for _ in 0..runs {
-        pot_energy += VelocityVerlet::integrate(
-            &mut atom_store,
-            &sim_box,
-            Some(&potential),
-            Some(&mut langevin),
-            dt,
-            temp,
-        )
-        .unwrap();
+        pot_energy +=
+            VelocityVerlet::integrate(&mut atom_store, &sim_box, &mut updater, dt, temp).unwrap();
 
         // updating kinetic energy
         kin_energy += atom_store
