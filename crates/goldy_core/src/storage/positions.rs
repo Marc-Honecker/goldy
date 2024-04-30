@@ -20,7 +20,9 @@ where
 
         Self { data: x }
     }
+}
 
+impl<T: Real, const D: usize> Positions<T, D> {
     pub fn zeros(n: usize) -> Self {
         Self {
             data: (0..n).map(|_| SVector::zeros()).collect(),
