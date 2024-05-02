@@ -8,12 +8,6 @@ pub struct Positions<T, const D: usize> {
     pub(super) data: Vec<SVector<T, D>>,
 }
 
-/// Holds all rescaled positions of the atoms.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ScaledPositions<T, const D: usize> {
-    pub(super) data: Vec<SVector<T, D>>,
-}
-
 /// Holds all velocities of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Velocities<T, const D: usize> {
@@ -23,12 +17,6 @@ pub struct Velocities<T, const D: usize> {
 /// Holds all forces of the atoms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Forces<T, const D: usize> {
-    pub(super) data: Vec<SVector<T, D>>,
-}
-
-/// Holds all accelerations of the atoms.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Accelerations<T, const D: usize> {
     pub(super) data: Vec<SVector<T, D>>,
 }
 
@@ -87,10 +75,8 @@ macro_rules! generate_iterators {
 }
 
 generate_iterators!(Positions);
-generate_iterators!(ScaledPositions);
 generate_iterators!(Velocities);
 generate_iterators!(Forces);
-generate_iterators!(Accelerations);
 
 #[cfg(test)]
 mod tests {
@@ -162,16 +148,16 @@ mod tests {
     #[test]
     fn test_into_iter() {
         let dt = 0.5;
-        let s_pos = ScaledPositions {
+        let pos = Positions {
             data: vec![
                 Vector3::new(1.0, 1.0, 1.0),
                 Vector3::new(0.0, 0.0, 0.0),
                 Vector3::new(0.5, 0.5, 0.5),
             ],
         };
-        let reference = s_pos.clone();
+        let reference = pos.clone();
 
-        let vel = s_pos
+        let vel = pos
             .into_iter()
             .map(|p| p / dt)
             .collect::<Velocities<f64, 3>>();
