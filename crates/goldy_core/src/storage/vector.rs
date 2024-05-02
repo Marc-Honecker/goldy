@@ -78,8 +78,24 @@ generate_iterators!(Positions);
 generate_iterators!(Velocities);
 generate_iterators!(Forces);
 
+macro_rules! generate_chunks {
+    ($type_name: ident) => {
+        impl<T, const D: usize> $type_name<T, D> {
+            pub(crate) fn chunks_mut(
+                &mut self,
+                chunk_size: usize,
+            ) -> std::slice::ChunksMut<'_, SVector<T, D>> {
+                self.data.chunks_mut(chunk_size)
+            }
+        }
+    };
+}
+
+generate_chunks!(Positions);
+
 #[cfg(test)]
 mod tests {
+    use assert_approx_eq::assert_approx_eq;
     use nalgebra::Vector3;
 
     use super::*;
@@ -169,5 +185,22 @@ mod tests {
                 .map(|r| r * 2.0)
                 .collect::<Velocities<f64, 3>>()
         );
+    }
+
+    #[test]
+    fn test_chunks_mut() {
+        // creating some positions
+        let mut x = Positions::<f32, 3>::zeros(100);
+
+        // transforming them
+        x.chunks_mut(10).for_each(|x_chunk| {
+            x_chunk
+                .iter_mut()
+                .for_each(|x| *x += Vector3::new(1.0, 1.0, 1.0))
+        });
+
+        // and now we can check, if everything was applied
+        x.iter()
+            .for_each(|x| x.iter().for_each(|x| assert_approx_eq!(x, 1.0)));
     }
 }
