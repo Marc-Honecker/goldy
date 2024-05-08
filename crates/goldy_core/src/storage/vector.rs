@@ -2,28 +2,13 @@ use nalgebra::SVector;
 
 use crate::storage::iterator::{Iter, IterMut};
 
-/// Holds all positions of the atoms.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Positions<T, const D: usize> {
-    pub(super) data: Vec<SVector<T, D>>,
-}
-
-/// Holds all velocities of the atoms.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Velocities<T, const D: usize> {
-    pub(super) data: Vec<SVector<T, D>>,
-}
-
-/// Holds all forces of the atoms.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Forces<T, const D: usize> {
-    pub(super) data: Vec<SVector<T, D>>,
-}
-
-impl<T, const D: usize> Positions<T, D> {}
-
-macro_rules! generate_iterators {
+macro_rules! generate_structs {
     ($type_name: ident) => {
+        #[derive(Debug, Clone, PartialEq, Eq)]
+        pub struct $type_name<T, const D: usize> {
+            pub(super) data: Vec<SVector<T, D>>,
+        }
+
         impl<T, const D: usize> $type_name<T, D> {
             /// Returns an iterator over the data.
             pub fn iter(&self) -> Iter<SVector<T, D>> {
@@ -74,9 +59,9 @@ macro_rules! generate_iterators {
     };
 }
 
-generate_iterators!(Positions);
-generate_iterators!(Velocities);
-generate_iterators!(Forces);
+generate_structs!(Positions);
+generate_structs!(Velocities);
+generate_structs!(Forces);
 
 #[cfg(test)]
 mod tests {
