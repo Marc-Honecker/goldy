@@ -61,6 +61,19 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         }
     }
 
+    /// Tests, if a given position lies in the `SimulationBox`.
+    pub fn contains(&self, x: &SVector<T, D>) -> bool {
+        match self.boundary_type {
+            BoundaryTypes::Periodic => {
+                let x = self.to_relative(*x);
+
+                x.iter().all(|&x| T::zero() <= x && x <= T::one())
+            }
+            // This case is trivial
+            BoundaryTypes::Open => true,
+        }
+    }
+
     /// Returns a relative `SVector`.
     #[inline]
     fn to_relative(&self, x: SVector<T, D>) -> SVector<T, D> {
