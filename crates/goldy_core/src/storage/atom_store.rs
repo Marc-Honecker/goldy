@@ -22,38 +22,9 @@ pub struct AtomStore<T: Real, const D: usize> {
 }
 
 impl<T: Real, const D: usize> AtomStore<T, D> {
-    /// Returns a reference to the positions.
-    pub fn positions(&self) -> &Positions<T, D> {
-        &self.x
-    }
-
-    /// Returns a mutable reference to the positions.
-    pub fn positions_mut(&mut self) -> &mut Positions<T, D> {
-        &mut self.x
-    }
-
-    /// Returns a reference to the velocities.
-    pub fn velocities(&self) -> &Velocities<T, D> {
-        &self.v
-    }
-
-    /// Returns a mutable reference to the velocities.
-    pub fn velocities_mut(&mut self) -> &mut Velocities<T, D> {
-        &mut self.v
-    }
-
-    /// Returns a reference to the forces.
-    pub fn forces(&self) -> &Forces<T, D> {
-        &self.f
-    }
-
-    /// Returns a mutable reference to the forces.
-    pub fn forces_mut(&mut self) -> &mut Forces<T, D> {
-        &mut self.f
-    }
-
-    pub fn atom_types(&self) -> &AtomTypeStore<T> {
-        &self.atom_types
+    /// Returns the number of atoms in this `AtomStore`.
+    pub fn number_of_atoms(&self) -> usize {
+        self.x.data.len()
     }
 }
 
