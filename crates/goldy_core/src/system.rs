@@ -65,6 +65,20 @@ impl<T: Real, const D: usize> System<T, D> {
         Self { sim_box, atoms }
     }
 
+    /// Tests, if all atoms still lie in the `SimulationBox`.
+    pub fn validate(&self) -> bool {
+        self.atoms.x.iter().all(|x| self.sim_box.contains(x))
+    }
+
+    /// Applies the boundary conditions.
+    pub fn apply_boundary_conditions(&mut self) {
+        self.sim_box.apply_boundary_conditions(&mut self.atoms.x);
+    }
+
+    pub fn number_of_atoms(&self) -> usize {
+        self.atoms.number_of_atoms()
+    }
+
     fn rec_cubic(
         x: &mut [SVector<T, D>],
         lattice_constant: T,
@@ -82,7 +96,6 @@ impl<T: Real, const D: usize> System<T, D> {
                 arr[0] = T::from_usize(i).unwrap() * lattice_constant;
                 // setting the shift_vector at x
                 let shift_vector = shift_vector + SVector::from_vec(arr.to_vec());
-                println!("{shift_vector}");
 
                 // setting the position
                 *pos += shift_vector;
@@ -109,7 +122,10 @@ impl<T: Real, const D: usize> System<T, D> {
 mod tests {
 
     use assert_approx_eq::assert_approx_eq;
+    use nalgebra::Vector3;
     use num_traits::Zero;
+
+    use crate::storage::atom_type::AtomTypeBuilder;
 
     use super::*;
 
@@ -204,5 +220,38 @@ mod tests {
                 .zip(x_ref)
                 .for_each(|(&x, &x_ref)| assert_approx_eq!(x, x_ref))
         });
+    }
+
+    #[test]
+    fn test_build_cubic() {
+        // Creating a cubic system with periodic boundary conditions.
+        let cubic_system = System::new_cubic(
+            Vector3::new(10, 5, 15),
+            5.0,
+            BoundaryTypes::Periodic,
+            AtomTypeBuilder::default()
+                .mass(39.0)
+                .damping(0.01)
+                .build()
+                .unwrap(),
+        );
+
+        // Let's see, if every atom lies in the `SimulationBox`.
+        cubic_system.validate();
+
+        // And now with open boundaries.
+        let cubic_system = System::new_cubic(
+            Vector3::new(10, 5, 15),
+            10.0,
+            BoundaryTypes::Open,
+            AtomTypeBuilder::default()
+                .mass(39.0)
+                .damping(0.01)
+                .build()
+                .unwrap(),
+        );
+
+        // Let's see, if every atom lies in the `SimulationBox`.
+        cubic_system.validate();
     }
 }
