@@ -8,6 +8,7 @@ pub mod potential;
 pub mod propagator;
 pub mod simulation_box;
 pub mod storage;
+pub mod system;
 pub mod thermo;
 
 pub type Result<T> = std::result::Result<T, GoldyError>;
