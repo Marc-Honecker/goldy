@@ -1,59 +1,33 @@
-use nalgebra::Matrix3;
+use nalgebra::Vector3;
 use std::f32::consts::PI;
 
 use goldy_core::{
     force_update::ForceUpdateBuilder,
     potential::harmonic_oscillator::HarmonicOscillatorBuilder,
     propagator::{velocity_verlet::VelocityVerlet, Propagator},
-    simulation_box::{BoundaryTypes, SimulationBoxBuilder},
-    storage::{
-        atom_store::AtomStoreBuilder,
-        atom_type::AtomTypeBuilder,
-        atom_type_store::AtomTypeStoreBuilder,
-        vector::{Forces, Positions, Velocities},
-    },
+    simulation_box::BoundaryTypes,
+    storage::atom_type::AtomTypeBuilder,
+    system::System,
     thermo::langevin::Langevin,
 };
 
 fn main() {
-    // Let's spawn many atoms.
-    let num_atoms = 1_000;
-
-    // Let's spawn them at random positions.
-    let x = Positions::<f32, 3>::new_gaussian(num_atoms, 0.0, 1.0);
-    let v = Velocities::<f32, 3>::zeros(num_atoms);
-    let f = Forces::<f32, 3>::zeros(num_atoms);
-    let atom_types = AtomTypeStoreBuilder::default()
-        .add_many(
-            AtomTypeBuilder::default()
-                .mass(1.0)
-                .damping(0.01)
-                .build()
-                .unwrap(),
-            num_atoms,
-        )
-        .build();
-
-    let mut atom_store = AtomStoreBuilder::default()
-        .positions(x)
-        .velocities(v)
-        .forces(f)
-        .atom_types(atom_types)
-        .build()
-        .unwrap();
+    // Let's spawn some atoms at cubic positions.
+    let mut system = System::new_cubic(
+        Vector3::new(10, 10, 10),
+        5.0,
+        BoundaryTypes::Periodic,
+        AtomTypeBuilder::default()
+            .mass(1.0)
+            .damping(0.01)
+            .build()
+            .unwrap(),
+    );
 
     // the md parameters
     let runs = 500_000;
     let dt = 2.0 * PI / 80.0;
     let temp = 1.0;
-
-    // The SimulationBox doesn't matter here, but
-    // we still need to define it.
-    let sim_box = SimulationBoxBuilder::default()
-        .hmatrix(Matrix3::from_diagonal_element(10.0))
-        .boundary_type(BoundaryTypes::Open)
-        .build()
-        .unwrap();
 
     // defining the potential
     let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
@@ -74,13 +48,15 @@ fn main() {
     // the main MD-loop
     for _ in 0..runs {
         pot_energy +=
-            VelocityVerlet::integrate(&mut atom_store, &sim_box, &mut updater, dt, temp).unwrap();
+            VelocityVerlet::integrate(&mut system.atoms, &system.sim_box, &mut updater, dt, temp)
+                .unwrap();
 
         // updating kinetic energy
-        kin_energy += atom_store
+        kin_energy += system
+            .atoms
             .v
             .iter()
-            .zip(&atom_store.atom_types)
+            .zip(&system.atoms.atom_types)
             .map(|(v, at)| v.dot(v) * at.mass())
             .sum::<f32>();
     }
@@ -88,10 +64,10 @@ fn main() {
     // dumping the results
     println!(
         "Mean potenital energy: {}",
-        pot_energy / (num_atoms * runs) as f32
+        pot_energy / (system.number_of_atoms() * runs) as f32
     );
     println!(
         "Mean kinetic energy: {}",
-        kin_energy / (num_atoms * runs) as f32 * 0.5
+        kin_energy / (system.number_of_atoms() * runs) as f32 * 0.5
     );
 }
