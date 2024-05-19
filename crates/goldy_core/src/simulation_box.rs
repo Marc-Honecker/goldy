@@ -22,7 +22,7 @@ pub enum BoundaryTypes {
 impl<T: Real, const D: usize> SimulationBox<T, D> {
     #[inline]
     /// Returns the squared distance between two `SVector`s. This
-    /// method obeyes the defined boundary conditions.
+    /// method obeys the defined boundary conditions.
     pub fn sq_distance(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> T {
         match self.boundary_type {
             // Periodic boundaries are currently the only special cases.
@@ -42,7 +42,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     }
 
     /// Returns the distance between two `SVector`s. This
-    /// method obeyes the defined boundary conditions.
+    /// method obeys the defined boundary conditions.
     #[inline]
     pub fn distance(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> T {
         na::ComplexField::sqrt(self.sq_distance(x1, x2))
@@ -86,7 +86,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         self.hmatrix * x
     }
 
-    /// Wraps a `SVector` s.t. it obeyes PBC.
+    /// Wraps a `SVector` s.t. it obeys PBC.
     #[inline]
     fn wrap_around(&self, x: &mut SVector<T, D>) {
         *x = self.to_relative(*x);
@@ -120,7 +120,7 @@ mod tests {
     fn test_builder() {
         // Let's create a simulation box with...
         let sim_box = SimulationBoxBuilder::<f32, 3>::default()
-            // ... a appropiate hmatrix and
+            // ... an appropriate hmatrix and
             .hmatrix(SMatrix::from_diagonal_element(10.0))
             // ... open boundaries.
             .boundary_type(BoundaryTypes::Open)
@@ -140,7 +140,7 @@ mod tests {
 
         // Now let's create one with ...
         assert!(SimulationBoxBuilder::<f32, 2>::default()
-            // ... an inappropiate hmatrix.
+            // ... an inappropriate hmatrix.
             .hmatrix(SMatrix::zeros())
             // The boundaries must be still okay.
             .boundary_type(BoundaryTypes::Periodic)
@@ -159,7 +159,7 @@ mod tests {
             .build()
             .unwrap();
 
-        // ... and test it with positions inside of the box.
+        // ... and test it with positions inside the box.
         let x1 = SVector::<f64, 4>::from_iterator([1.0, 1.0, 1.0, 1.0]);
         let x2 = SVector::<f64, 4>::from_iterator([9.0, 9.0, 9.0, 9.0]);
 
