@@ -137,4 +137,12 @@ mod tests {
         assert!(updater.thermostat.is_none());
         assert!(updater.potential.is_none());
     }
+
+    #[test]
+    fn test_new() {
+        let empty_updater = ForceUpdate::<f64, 3>::new();
+
+        assert!(empty_updater.potential.is_none());
+        assert!(empty_updater.thermostat.is_none());
+    }
 }
