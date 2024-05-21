@@ -7,7 +7,7 @@ pub enum GoldyError {
     #[error("invalid value (expected {expected:?}, found {found:?})")]
     ValueError { expected: String, found: String },
     #[error("expected value to be greater than 0, but was {found:?}")]
-    NegativValue { found: String },
-    #[error("An error occured: {msg:?}")]
+    NegativeValue { found: String },
+    #[error("An error occurred: {msg:?}")]
     CatchAll { msg: String },
 }
