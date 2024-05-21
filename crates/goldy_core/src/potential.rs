@@ -9,6 +9,7 @@ use crate::{
 
 pub mod harmonic_oscillator;
 pub mod pair_potential;
+mod pair_potential_collection;
 
 pub trait Potential<T: Real, const D: usize> {
     /// Evaluates the forces and energies.
