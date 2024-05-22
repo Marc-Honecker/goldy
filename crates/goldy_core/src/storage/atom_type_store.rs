@@ -27,7 +27,7 @@ impl<T: Real> IntoIterator for AtomTypeStore<T> {
 
 impl<'a, T: Real> IntoIterator for &'a AtomTypeStore<T> {
     type Item = &'a AtomType<T>;
-    type IntoIter = crate::storage::iterator::Iter<'a, AtomType<T>>;
+    type IntoIter = Iter<'a, AtomType<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -45,15 +45,24 @@ impl<T: Real> AtomTypeStoreBuilder<T> {
     }
 
     /// Adds a single `AtomType` at a time.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the id of the new atom_type is already used.
     pub fn add(&mut self, atom_type: AtomType<T>) -> &mut Self {
-        self.data.push(atom_type);
+        self.data.iter().for_each(|at| {
+            if at.id() == atom_type.id() {
+                panic!("The ids of the `AtomType`s must be unique")
+            }
+        });
 
+        self.data.push(atom_type);
         self
     }
 
     /// Adds a bunch of `AtomType`s all at once.
     pub fn add_many(&mut self, atom_type: AtomType<T>, n: usize) -> &mut Self {
-        // Propably a bit inefficient, but that can be changed later on.
+        // Probably a bit inefficient, but that can be changed later on.
         (0..n).for_each(|_| self.data.push(atom_type));
 
         self
@@ -77,6 +86,7 @@ mod tests {
     fn test_atom_type_store() {
         // First, we create a proper Argon atom.
         let argon = AtomTypeBuilder::default()
+            .id(0)
             .mass(39.95)
             .damping(0.01)
             .build()
@@ -84,6 +94,7 @@ mod tests {
 
         // Then, we create a Hydrogen atom.
         let hydrogen = AtomTypeBuilder::default()
+            .id(1)
             .mass(1.0)
             .damping(0.005)
             .build()
@@ -115,5 +126,31 @@ mod tests {
             assert_eq!(at.mass(), argon.mass());
             assert_eq!(at.damping(), argon.damping());
         }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_duplicate_id() {
+        // Creating an `AtomTypeStore`.
+        AtomTypeStoreBuilder::default()
+            .add(
+                AtomTypeBuilder::default()
+                    // Here we use ID = 0
+                    .id(0)
+                    .mass(1.0)
+                    .damping(0.01)
+                    .build()
+                    .unwrap(),
+            )
+            .add(
+                AtomTypeBuilder::default()
+                    // and here again, so this has to fail.
+                    .id(0)
+                    .mass(39.95)
+                    .damping(0.005)
+                    .build()
+                    .unwrap(),
+            )
+            .build();
     }
 }

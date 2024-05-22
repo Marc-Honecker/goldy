@@ -120,10 +120,10 @@ impl<T: Real, const D: usize> System<T, D> {
 
 #[cfg(test)]
 mod tests {
-
     use assert_approx_eq::assert_approx_eq;
     use nalgebra::Vector3;
     use num_traits::Zero;
+    use std::iter::Zip;
 
     use crate::storage::atom_type::AtomTypeBuilder;
 
@@ -215,7 +215,7 @@ mod tests {
             }
         }
 
-        x.iter().zip(&x_ref).for_each(|(x, x_ref)| {
+        Zip::for_each(x.iter().zip(&x_ref), |(x, x_ref)| {
             x.iter()
                 .zip(x_ref)
                 .for_each(|(&x, &x_ref)| assert_approx_eq!(x, x_ref))
@@ -230,6 +230,7 @@ mod tests {
             5.0,
             BoundaryTypes::Periodic,
             AtomTypeBuilder::default()
+                .id(0)
                 .mass(39.0)
                 .damping(0.01)
                 .build()
@@ -245,6 +246,7 @@ mod tests {
             10.0,
             BoundaryTypes::Open,
             AtomTypeBuilder::default()
+                .id(0)
                 .mass(39.0)
                 .damping(0.01)
                 .build()

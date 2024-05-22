@@ -98,6 +98,7 @@ mod tests {
         let types = AtomTypeStoreBuilder::default()
             .add_many(
                 AtomTypeBuilder::default()
+                    .id(0)
                     .mass(mass)
                     .damping(gamma)
                     .build()

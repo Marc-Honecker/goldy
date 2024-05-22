@@ -19,6 +19,7 @@ fn ideal_gas() {
 
     // Argon
     let at = AtomTypeBuilder::default()
+        .id(0)
         .damping(0.01)
         .mass(39.95)
         .build()

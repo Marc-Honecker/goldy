@@ -65,6 +65,7 @@ mod tests {
                 AtomTypeStoreBuilder::default()
                     .add(
                         AtomTypeBuilder::default()
+                            .id(0)
                             .mass(39.95)
                             .damping(0.01)
                             .build()

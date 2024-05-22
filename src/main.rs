@@ -17,6 +17,7 @@ fn main() {
         5.0,
         BoundaryTypes::Periodic,
         AtomTypeBuilder::default()
+            .id(0)
             .mass(39.95)
             .damping(0.01)
             .build()

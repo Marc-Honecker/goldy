@@ -1,10 +1,9 @@
 use derive_builder::Builder;
 
-use crate::force_update::ForceUpdate;
-use crate::propagator::Propagator;
-use crate::simulation_box::SimulationBox;
-use crate::storage::atom_store::AtomStore;
-use crate::Real;
+use crate::{
+    force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore, Real,
+};
 
 pub struct Simulation<T: Real, const D: usize, P: Propagator> {
     atoms: AtomStore<T, D>,

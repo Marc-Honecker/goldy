@@ -1,5 +1,4 @@
 use derive_builder::Builder;
-use uuid::Uuid;
 
 use crate::Real;
 
@@ -8,8 +7,7 @@ use crate::Real;
 /// Determines the type of the atom and stores per atom data like
 /// the mass and the damping.
 pub struct AtomType<T: Real> {
-    #[builder(setter(skip), default = "Uuid::new_v4()")]
-    id: Uuid,
+    id: u32,
     mass: T,
     damping: T,
 }
@@ -27,7 +25,7 @@ impl<T: Real> AtomType<T> {
     }
 
     /// Returns the ID of this atom-type.
-    pub fn id(&self) -> Uuid {
+    pub fn id(&self) -> u32 {
         self.id
     }
 }
@@ -60,17 +58,18 @@ mod tests {
     fn test_atomtype_builder() {
         // easy case
         let at = AtomTypeBuilder::default()
+            .id(1)
             .damping(0.01)
             .mass(39.95)
             .build()
             .unwrap();
 
         // everything should have worked well, so we can compare
-        // with an new entity (but with the same id).
+        // with a new entity (but with the same id).
         assert_eq!(
             at,
             AtomType {
-                id: at.id,
+                id: 1,
                 mass: 39.95,
                 damping: 0.01
             }
@@ -78,6 +77,7 @@ mod tests {
 
         // with an inappropriate mass
         let failed_at = AtomTypeBuilder::default()
+            .id(0)
             .damping(0.01)
             .mass(-1.0)
             .build()
@@ -92,6 +92,7 @@ mod tests {
 
         // with an inappropriate damping
         let other_failed = AtomTypeBuilder::default()
+            .id(0)
             .damping(-2.0)
             .mass(39.95)
             .build()
@@ -109,13 +110,14 @@ mod tests {
     fn test_atom_type_getter() {
         // Building a valide atom-type.
         let at = AtomTypeBuilder::default()
+            .id(0)
             .mass(39.95)
             .damping(0.01)
             .build()
             .unwrap();
 
-        // The mass and damping have to match, but the id is random,
-        // so testing is difficult.
+        // Testing, if they match.
+        assert_eq!(at.id(), 0);
         assert_eq!(at.mass(), 39.95);
         assert_eq!(at.damping(), 0.01);
     }
