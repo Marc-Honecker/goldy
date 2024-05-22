@@ -1,5 +1,4 @@
 use nalgebra::Vector3;
-use std::f32::consts::PI;
 
 use goldy_core::{
     force_update::ForceUpdateBuilder,
@@ -18,7 +17,7 @@ fn main() {
         5.0,
         BoundaryTypes::Periodic,
         AtomTypeBuilder::default()
-            .mass(1.0)
+            .mass(39.95)
             .damping(0.01)
             .build()
             .unwrap(),
@@ -26,8 +25,8 @@ fn main() {
 
     // the md parameters
     let runs = 500_000;
-    let dt = 2.0 * PI / 80.0;
-    let temp = 1.0;
+    let dt = 0.01;
+    let temp = 100.0;
 
     // defining the potential
     let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
