@@ -56,7 +56,6 @@ where
             let rand_vec = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
 
             // adding the random forces
-            // safety: T must be a number, so it's save to simply unwrap at this point.
             *f += rand_vec * ComplexField::sqrt(T::from(6).unwrap() * dp / dt * temp);
         });
     }

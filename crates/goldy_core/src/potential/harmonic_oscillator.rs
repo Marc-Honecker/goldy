@@ -30,9 +30,8 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
         // main loop
         f.iter_mut().zip(x).for_each(|(f, &x)| {
             // f = -kx
-            *f += -x * self.k;
+            *f -= x * self.k;
             // u = 1/2 * k * x^2
-            // safety: T::from(0.5) is guaranteed to exist by design
             pot_energy += T::from(0.5).unwrap() * self.k * x.dot(&x);
         });
 
