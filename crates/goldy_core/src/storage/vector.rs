@@ -1,5 +1,6 @@
 use nalgebra::SVector;
 
+use crate::Real;
 use crate::storage::iterator::{Iter, IterMut};
 
 macro_rules! generate_structs {
@@ -23,6 +24,15 @@ macro_rules! generate_structs {
             /// Returns the length of the data
             pub(crate) fn len(&self) -> usize {
                 self.data.len()
+            }
+        }
+
+        impl<T: Real, const D: usize> $type_name<T, D> {
+            /// Creates `n` entries, all set to the zero vector.
+            pub fn zeros(n: usize) -> Self {
+                Self {
+                    data: (0..n).map(|_| SVector::zeros()).collect(),
+                }
             }
         }
 

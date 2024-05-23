@@ -3,7 +3,7 @@ use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::{storage::vector::Positions, Real};
+use crate::{Real, storage::vector::Positions};
 
 impl<T, const D: usize> Positions<T, D>
 where
@@ -19,13 +19,5 @@ where
             .collect();
 
         Self { data: x }
-    }
-}
-
-impl<T: Real, const D: usize> Positions<T, D> {
-    pub fn zeros(n: usize) -> Self {
-        Self {
-            data: (0..n).map(|_| SVector::zeros()).collect(),
-        }
     }
 }
