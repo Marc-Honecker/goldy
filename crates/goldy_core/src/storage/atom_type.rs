@@ -55,7 +55,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_atomtype_builder() {
+    fn test_atom_type_builder() {
         // easy case
         let at = AtomTypeBuilder::default()
             .id(1)
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_atom_type_getter() {
-        // Building a valide atom-type.
+        // Building a valid atom-type.
         let at = AtomTypeBuilder::default()
             .id(0)
             .mass(39.95)
