@@ -1,11 +1,11 @@
 use derive_builder::Builder;
 
 use crate::{
+    Real,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions, Velocities},
     },
-    Real,
 };
 
 #[derive(Debug, Clone, Builder)]
@@ -24,7 +24,7 @@ pub struct AtomStore<T: Real, const D: usize> {
 impl<T: Real, const D: usize> AtomStore<T, D> {
     /// Returns the number of atoms in this `AtomStore`.
     pub fn number_of_atoms(&self) -> usize {
-        self.x.data.len()
+        self.x.len()
     }
 }
 
@@ -34,19 +34,19 @@ impl<T: Real, const D: usize> AtomStoreBuilder<T, D> {
 
         if let Some(x) = &self.x {
             if let Some(v) = &self.v {
-                if v.data.len() != x.data.len() {
+                if v.len() != x.len() {
                     return Err(err_msg.into());
                 }
             }
 
             if let Some(f) = &self.f {
-                if f.data.len() != x.data.len() {
+                if f.len() != x.len() {
                     return Err(err_msg.into());
                 }
             }
 
             if let Some(atom_types) = &self.atom_types {
-                if atom_types.data.len() != x.data.len() {
+                if atom_types.len() != x.len() {
                     return Err(err_msg.into());
                 }
             }
@@ -92,10 +92,10 @@ mod tests {
             .unwrap();
 
         assert!(
-            atom_store.x.data.len() == num_atoms
-                && atom_store.v.data.len() == num_atoms
-                && atom_store.f.data.len() == num_atoms
-                && atom_store.atom_types.data.len() == num_atoms
+            atom_store.x.len() == num_atoms
+                && atom_store.v.len() == num_atoms
+                && atom_store.f.len() == num_atoms
+                && atom_store.atom_types.len() == num_atoms
         );
 
         // Now let's test when one element doesn't match in size

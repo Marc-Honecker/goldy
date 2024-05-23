@@ -1,6 +1,6 @@
 use nalgebra::SVector;
 
-use crate::{storage::vector::Forces, Real};
+use crate::{Real, storage::vector::Forces};
 
 impl<T: Real, const D: usize> Forces<T, D> {
     pub fn zeros(n: usize) -> Self {
@@ -11,6 +11,6 @@ impl<T: Real, const D: usize> Forces<T, D> {
 
     /// Sets all forces to zero.
     pub fn set_to_zero(&mut self) {
-        self.data.iter_mut().for_each(|f| *f = SVector::zeros());
+        self.iter_mut().for_each(|f| *f = SVector::zeros());
     }
 }

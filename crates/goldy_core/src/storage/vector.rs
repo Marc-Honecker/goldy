@@ -19,6 +19,11 @@ macro_rules! generate_structs {
             pub fn iter_mut(&mut self) -> IterMut<SVector<T, D>> {
                 IterMut::new(self.data.iter_mut())
             }
+
+            /// Returns the length of the data
+            pub(crate) fn len(&self) -> usize {
+                self.data.len()
+            }
         }
 
         impl<T, const D: usize> IntoIterator for $type_name<T, D> {

@@ -6,13 +6,18 @@ use crate::{
 #[derive(Debug, Default, Clone)]
 pub struct AtomTypeStore<T: Real> {
     // The data-layout will most likely change!
-    pub(super) data: Vec<AtomType<T>>,
+    data: Vec<AtomType<T>>,
 }
 
 impl<T: Real> AtomTypeStore<T> {
     /// Returns an iterator over the `AtomType`s.
     pub fn iter(&self) -> Iter<AtomType<T>> {
         Iter::new(self.data.iter())
+    }
+
+    /// Returns the length of the data
+    pub(super) fn len(&self) -> usize {
+        self.data.len()
     }
 }
 
