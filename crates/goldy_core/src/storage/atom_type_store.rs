@@ -1,6 +1,6 @@
 use crate::{
-    storage::{atom_type::AtomType, iterator::Iter},
     Real,
+    storage::{atom_type::AtomType, iterator::Iter},
 };
 
 #[derive(Debug, Default, Clone)]
@@ -45,17 +45,7 @@ impl<T: Real> AtomTypeStoreBuilder<T> {
     }
 
     /// Adds a single `AtomType` at a time.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the id of the new atom_type is already used.
     pub fn add(&mut self, atom_type: AtomType<T>) -> &mut Self {
-        self.data.iter().for_each(|at| {
-            if at.id() == atom_type.id() {
-                panic!("The ids of the `AtomType`s must be unique")
-            }
-        });
-
         self.data.push(atom_type);
         self
     }
@@ -126,31 +116,5 @@ mod tests {
             assert_eq!(at.mass(), argon.mass());
             assert_eq!(at.damping(), argon.damping());
         }
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_duplicate_id() {
-        // Creating an `AtomTypeStore`.
-        AtomTypeStoreBuilder::default()
-            .add(
-                AtomTypeBuilder::default()
-                    // Here we use ID = 0
-                    .id(0)
-                    .mass(1.0)
-                    .damping(0.01)
-                    .build()
-                    .unwrap(),
-            )
-            .add(
-                AtomTypeBuilder::default()
-                    // and here again, so this has to fail.
-                    .id(0)
-                    .mass(39.95)
-                    .damping(0.005)
-                    .build()
-                    .unwrap(),
-            )
-            .build();
     }
 }
