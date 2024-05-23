@@ -1,10 +1,13 @@
-use crate::Real;
-use num_traits::Float;
 use std::fs::File;
 use std::io::Write;
 
+use num_traits::Float;
+
+use crate::Real;
+
 const N: usize = 1024;
 
+#[derive(Debug, Copy, Clone)]
 pub struct PairPotential<T: Real> {
     sq_cutoff: T,
     dr: T,
@@ -146,8 +149,9 @@ create_pair_potential!(morse, new_morse);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use assert_approx_eq::assert_approx_eq;
+
+    use super::*;
 
     #[test]
     fn test_get_idx() {
