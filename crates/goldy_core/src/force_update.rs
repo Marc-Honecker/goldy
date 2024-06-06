@@ -1,7 +1,9 @@
 use crate::{
-    potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
-    thermo::ForceDrivenThermostat, Real,
+    potential::Potential, Real, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore, thermo::ForceDrivenThermostat,
 };
+use crate::storage::atom_type_store::AtomTypeStore;
+use crate::storage::vector::Positions;
 
 #[derive(Default)]
 pub struct ForceUpdate<T: Real, const D: usize> {
@@ -25,7 +27,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
         sim_box: &SimulationBox<T, D>,
         temp: T,
         dt: T,
-    ) -> Option<T> {
+    ) {
         // First, the forces need to be set to zero.
         atom_store.f.set_to_zero();
 
@@ -41,17 +43,25 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
         }
 
         // And now the potential.
-        // Since the potential might be missing too,
-        // the method returns the potential energy as an Option<T>.
-        match &mut self.potential {
-            Some(pot) => Some(pot.eval(
+        if let Some(potential) = &self.potential {
+            potential.update_forces(
                 &atom_store.x,
                 &mut atom_store.f,
                 sim_box,
                 &atom_store.atom_types,
-            )),
-            None => None,
+            );
         }
+    }
+
+    pub fn measure_energy(
+        &self,
+        x: &Positions<T, D>,
+        sim_box: &SimulationBox<T, D>,
+        atom_types: &AtomTypeStore<T>,
+    ) -> Option<T> {
+        self.potential
+            .as_ref()
+            .map(|potential| potential.measure_energy(x, sim_box, atom_types))
     }
 }
 
@@ -114,7 +124,7 @@ mod tests {
             .potential(Box::new(potential))
             .build();
 
-        // Since everything was set, both memebers should be present.
+        // Since everything was set, both members should be present.
         assert!(updater.thermostat.is_some());
         assert!(updater.potential.is_some());
 

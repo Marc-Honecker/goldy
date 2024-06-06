@@ -1,6 +1,6 @@
 use derive_builder::Builder;
 
-use crate::{potential::pair_potential::PairPotential, Real, storage::atom_type::AtomType};
+use crate::{potential::pair_potential::PairPotential, storage::atom_type::AtomType, Real};
 
 #[derive(Builder)]
 #[builder(build_fn(validate = "Self::validate"))]

@@ -2,12 +2,12 @@ use derive_builder::Builder;
 
 use crate::{
     potential::Potential,
+    Real,
     simulation_box::SimulationBox,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions},
     },
-    Real,
 };
 
 #[derive(Debug, Builder)]
@@ -36,6 +36,27 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
         });
 
         pot_energy
+    }
+
+    fn measure_energy(
+        &self,
+        x: &Positions<T, D>,
+        _: &SimulationBox<T, D>,
+        _: &AtomTypeStore<T>,
+    ) -> T {
+        x.iter().fold(T::zero(), |e, x| {
+            e + T::from(0.5).unwrap() * self.k * x.dot(x)
+        })
+    }
+
+    fn update_forces(
+        &self,
+        x: &Positions<T, D>,
+        f: &mut Forces<T, D>,
+        _: &SimulationBox<T, D>,
+        _: &AtomTypeStore<T>,
+    ) {
+        f.iter_mut().zip(x).for_each(|(f, x)| *f -= x * self.k)
     }
 }
 

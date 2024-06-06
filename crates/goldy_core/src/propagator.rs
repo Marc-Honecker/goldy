@@ -1,5 +1,5 @@
 use crate::{
-    force_update::ForceUpdate, simulation_box::SimulationBox, storage::atom_store::AtomStore, Real,
+    force_update::ForceUpdate, Real, simulation_box::SimulationBox, storage::atom_store::AtomStore,
 };
 
 pub mod euler;
@@ -14,5 +14,5 @@ pub trait Propagator {
         updater: &mut ForceUpdate<T, D>,
         dt: T,
         temp: T,
-    ) -> Option<T>;
+    );
 }

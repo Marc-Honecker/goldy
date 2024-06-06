@@ -10,11 +10,11 @@ impl Propagator for Euler {
         updater: &mut ForceUpdate<T, D>,
         dt: T,
         temp: T,
-    ) -> Option<T> {
+    ) {
         // updating the forces
-        let potential_energy = updater.update_forces(atom_store, sim_box, temp, dt);
+        updater.update_forces(atom_store, sim_box, temp, dt);
 
-        // The force computation is completed and we can update the rest.
+        // The force computation is completed, and we can update the rest.
         // Updating the velocities.
         atom_store
             .v
@@ -31,13 +31,14 @@ impl Propagator for Euler {
             .iter_mut()
             .zip(&atom_store.v)
             .for_each(|(x, &v)| *x += v * dt);
-
-        potential_energy
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use assert_approx_eq::assert_approx_eq;
+    use nalgebra::Matrix3;
+
     use crate::{
         simulation_box::{BoundaryTypes, SimulationBoxBuilder},
         storage::{
@@ -47,9 +48,6 @@ mod tests {
             vector::{Forces, Positions, Velocities},
         },
     };
-
-    use assert_approx_eq::assert_approx_eq;
-    use nalgebra::Matrix3;
 
     use super::*;
 
@@ -83,17 +81,14 @@ mod tests {
             .build()
             .unwrap();
 
-        // propating one step
-        let potential_energy = Euler::integrate::<f32, 3>(
+        // propagating one step in time
+        Euler::integrate::<f32, 3>(
             &mut atom_store,
             &sim_box,
             &mut ForceUpdate::new(),
             0.01,
             1.0,
         );
-
-        // potential_energy must be None, because we didn't provide any Potential nor Thermostat.
-        assert_eq!(potential_energy, None);
 
         // testing, if everything stayed zero
         atom_store

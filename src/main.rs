@@ -3,7 +3,7 @@ use nalgebra::Vector3;
 use goldy_core::{
     force_update::ForceUpdateBuilder,
     potential::harmonic_oscillator::HarmonicOscillatorBuilder,
-    propagator::{velocity_verlet::VelocityVerlet, Propagator},
+    propagator::{Propagator, velocity_verlet::VelocityVerlet},
     simulation_box::BoundaryTypes,
     storage::atom_type::AtomTypeBuilder,
     system::System,
@@ -47,9 +47,13 @@ fn main() {
 
     // the main MD-loop
     for _ in 0..runs {
-        pot_energy +=
-            VelocityVerlet::integrate(&mut system.atoms, &system.sim_box, &mut updater, dt, temp)
-                .unwrap();
+        // stepping forward in time
+        VelocityVerlet::integrate(&mut system.atoms, &system.sim_box, &mut updater, dt, temp);
+
+        // updating the potential energy
+        pot_energy += updater
+            .measure_energy(&system.atoms.x, &system.sim_box, &system.atoms.atom_types)
+            .unwrap();
 
         // updating kinetic energy
         kin_energy += system
@@ -63,7 +67,7 @@ fn main() {
 
     // dumping the results
     println!(
-        "Mean potenital energy: {}",
+        "Mean potential energy: {}",
         pot_energy / (system.number_of_atoms() * runs) as f32
     );
     println!(
