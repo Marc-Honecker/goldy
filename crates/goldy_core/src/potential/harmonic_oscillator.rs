@@ -17,27 +17,6 @@ pub struct HarmonicOscillator<T: Real> {
 }
 
 impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
-    fn eval(
-        &self,
-        x: &Positions<T, D>,
-        f: &mut Forces<T, D>,
-        _: &SimulationBox<T, D>,
-        _: &AtomTypeStore<T>,
-    ) -> T {
-        // accumulator for the potential energy
-        let mut pot_energy = T::zero();
-
-        // main loop
-        f.iter_mut().zip(x).for_each(|(f, &x)| {
-            // f = -kx
-            *f -= x * self.k;
-            // u = 1/2 * k * x^2
-            pot_energy += T::from(0.5).unwrap() * self.k * x.dot(&x);
-        });
-
-        pot_energy
-    }
-
     fn measure_energy(
         &self,
         x: &Positions<T, D>,
@@ -127,7 +106,8 @@ mod tests {
             // initializing the forces
             let mut f = Forces::<f32, 3>::zeros(1);
             // computing the Forces
-            pot_energy += potential.eval(&x, &mut f, &sim_box, &atom_types);
+            potential.update_forces(&x, &mut f, &sim_box, &atom_types);
+            pot_energy += potential.measure_energy(&x, &sim_box, &atom_types);
             // stepping forward in time
             f.iter_mut()
                 .zip(&atom_types)
@@ -181,7 +161,8 @@ mod tests {
             // initializing the forces
             let mut f = Forces::<f32, 3>::zeros(num_atoms);
             // computing the Forces
-            pot_energy += potential.eval(&x, &mut f, &sim_box, &atom_types);
+            potential.update_forces(&x, &mut f, &sim_box, &atom_types);
+            pot_energy += potential.measure_energy(&x, &sim_box, &atom_types);
             // stepping forward in time
             f.iter_mut()
                 .zip(&atom_types)
