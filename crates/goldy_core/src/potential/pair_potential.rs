@@ -22,19 +22,27 @@ impl<T: Real> PairPotential<T> {
         Self::new_mie(12, 6, u0, r0, cutoff)
     }
 
-    /// Returns the approximated energy and pseudo force at the given squared distance `r_sq`.
+    /// Approximates the potential energy at a given squared distance `r_sq`.
     #[inline]
-    pub fn eval(&self, r_sq: T) -> (T, T) {
+    pub fn energy(&self, r_sq: T) -> T {
         if r_sq > self.sq_cutoff {
-            (T::zero(), T::zero())
+            T::zero()
         } else {
             let (idx, weight) = self.get_idx(r_sq);
 
-            let energy = weight * self.energies[idx] + (T::one() - weight) * self.energies[idx + 1];
-            let pseudo_force = weight * self.pseudo_forces[idx]
-                + (T::one() - weight) * self.pseudo_forces[idx + 1];
+            weight * self.energies[idx] + (T::one() - weight) * self.energies[idx + 1]
+        }
+    }
 
-            (energy, pseudo_force)
+    /// Approximates dU/dr^2 at a given squared distance `r_sq`.
+    #[inline]
+    pub fn pseudo_force(&self, r_sq: T) -> T {
+        if r_sq > self.sq_cutoff {
+            T::zero()
+        } else {
+            let (idx, weight) = self.get_idx(r_sq);
+
+            weight * self.pseudo_forces[idx] + (T::one() - weight) * self.pseudo_forces[idx + 1]
         }
     }
 
@@ -200,17 +208,20 @@ mod tests {
         };
 
         // testing the energy and pseudo force at r_sq = 10.0
-        let (e, f) = pair_potential.eval(8.0);
+        let e = pair_potential.energy(8.0);
+        let f = pair_potential.pseudo_force(8.0);
         assert_approx_eq!(e, 8.0);
         assert_approx_eq!(f, 8.0);
 
         // testing the energy and pseudo force at r_sq = 4.5
-        let (e, f) = pair_potential.eval(4.5);
+        let e = pair_potential.energy(4.5);
+        let f = pair_potential.pseudo_force(4.5);
         assert_approx_eq!(e, 4.5);
         assert_approx_eq!(f, 4.5);
 
         // testing the energy and pseudo force at r_sq > sq_cutoff
-        let (e, f) = pair_potential.eval(12.0);
+        let e = pair_potential.energy(12.0);
+        let f = pair_potential.pseudo_force(12.0);
         assert_approx_eq!(e, 0.0);
         assert_approx_eq!(f, 0.0)
     }
