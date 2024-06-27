@@ -20,6 +20,7 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     fn measure_energy(
         &self,
         x: &Positions<T, D>,
+        _: &[&[usize]],
         _: &SimulationBox<T, D>,
         _: &AtomTypeStore<T>,
     ) -> T {
@@ -31,6 +32,7 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     fn update_forces(
         &self,
         x: &Positions<T, D>,
+        _: &[&[usize]],
         f: &mut Forces<T, D>,
         _: &SimulationBox<T, D>,
         _: &AtomTypeStore<T>,
@@ -106,8 +108,8 @@ mod tests {
             // initializing the forces
             let mut f = Forces::<f32, 3>::zeros(1);
             // computing the Forces
-            potential.update_forces(&x, &mut f, &sim_box, &atom_types);
-            pot_energy += potential.measure_energy(&x, &sim_box, &atom_types);
+            potential.update_forces(&x, &Vec::new(), &mut f, &sim_box, &atom_types);
+            pot_energy += potential.measure_energy(&x, &Vec::new(), &sim_box, &atom_types);
             // stepping forward in time
             f.iter_mut()
                 .zip(&atom_types)
@@ -161,8 +163,8 @@ mod tests {
             // initializing the forces
             let mut f = Forces::<f32, 3>::zeros(num_atoms);
             // computing the Forces
-            potential.update_forces(&x, &mut f, &sim_box, &atom_types);
-            pot_energy += potential.measure_energy(&x, &sim_box, &atom_types);
+            potential.update_forces(&x, &Vec::new(), &mut f, &sim_box, &atom_types);
+            pot_energy += potential.measure_energy(&x, &Vec::new(), &sim_box, &atom_types);
             // stepping forward in time
             f.iter_mut()
                 .zip(&atom_types)

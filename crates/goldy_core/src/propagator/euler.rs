@@ -6,13 +6,14 @@ pub struct Euler;
 impl Propagator for Euler {
     fn integrate<T: Real, const D: usize>(
         atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
+        neighbor_list: &[&[usize]],
         sim_box: &crate::simulation_box::SimulationBox<T, D>,
         updater: &mut ForceUpdate<T, D>,
         dt: T,
         temp: T,
     ) {
         // updating the forces
-        updater.update_forces(atom_store, sim_box, temp, dt);
+        updater.update_forces(atom_store, neighbor_list, sim_box, temp, dt);
 
         // The force computation is completed, and we can update the rest.
         // Updating the velocities.
@@ -84,6 +85,7 @@ mod tests {
         // propagating one step in time
         Euler::integrate::<f32, 3>(
             &mut atom_store,
+            &Vec::new(),
             &sim_box,
             &mut ForceUpdate::new(),
             0.01,

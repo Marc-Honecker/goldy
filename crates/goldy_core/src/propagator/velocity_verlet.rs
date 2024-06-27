@@ -1,6 +1,6 @@
 use crate::{
-    force_update::ForceUpdate, propagator::Propagator, Real,
-    simulation_box::SimulationBox, storage::atom_store::AtomStore,
+    force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore, Real,
 };
 
 pub struct VelocityVerlet;
@@ -8,6 +8,7 @@ pub struct VelocityVerlet;
 impl Propagator for VelocityVerlet {
     fn integrate<T: Real, const D: usize>(
         atom_store: &mut AtomStore<T, D>,
+        neighbor_list: &[&[usize]],
         sim_box: &SimulationBox<T, D>,
         updater: &mut ForceUpdate<T, D>,
         dt: T,
@@ -29,7 +30,7 @@ impl Propagator for VelocityVerlet {
             .for_each(|(x, &v)| *x += v * dt);
 
         // updating the forces
-        updater.update_forces(atom_store, sim_box, temp, dt);
+        updater.update_forces(atom_store, neighbor_list, sim_box, temp, dt);
 
         // And now we can update the velocities the last half timestep.
         atom_store

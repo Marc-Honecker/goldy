@@ -3,7 +3,7 @@ use nalgebra::Vector3;
 use goldy_core::{
     force_update::ForceUpdateBuilder,
     potential::harmonic_oscillator::HarmonicOscillatorBuilder,
-    propagator::{Propagator, velocity_verlet::VelocityVerlet},
+    propagator::{velocity_verlet::VelocityVerlet, Propagator},
     simulation_box::BoundaryTypes,
     storage::atom_type::AtomTypeBuilder,
     system::System,
@@ -48,11 +48,23 @@ fn main() {
     // the main MD-loop
     for _ in 0..runs {
         // stepping forward in time
-        VelocityVerlet::integrate(&mut system.atoms, &system.sim_box, &mut updater, dt, temp);
+        VelocityVerlet::integrate(
+            &mut system.atoms,
+            &Vec::new(),
+            &system.sim_box,
+            &mut updater,
+            dt,
+            temp,
+        );
 
         // updating the potential energy
         pot_energy += updater
-            .measure_energy(&system.atoms.x, &system.sim_box, &system.atoms.atom_types)
+            .measure_energy(
+                &system.atoms.x,
+                &Vec::new(),
+                &system.sim_box,
+                &system.atoms.atom_types,
+            )
             .unwrap();
 
         // updating kinetic energy

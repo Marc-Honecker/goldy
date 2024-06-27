@@ -42,7 +42,14 @@ fn ideal_gas() {
     // the main MD-loop
     for _ in 0..runs {
         // propagating the system in time
-        VelocityVerlet::integrate(&mut system.atoms, &system.sim_box, &mut updater, dt, temp);
+        VelocityVerlet::integrate(
+            &mut system.atoms,
+            &Vec::new(),
+            &system.sim_box,
+            &mut updater,
+            dt,
+            temp,
+        );
 
         // measuring the kinetic energy
         let tkin_mean = 0.5
