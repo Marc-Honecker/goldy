@@ -25,6 +25,12 @@ macro_rules! generate_structs {
             pub(crate) fn len(&self) -> usize {
                 self.data.len()
             }
+
+            /// Returns the element at the given index.
+            #[allow(unused)]
+            pub(crate) fn get_by_idx(&self, idx: usize) -> &SVector<T, D> {
+                &self.data[idx]
+            }
         }
 
         impl<T: Real, const D: usize> $type_name<T, D> {
@@ -169,5 +175,20 @@ mod tests {
                 .map(|r| r * 2.0)
                 .collect::<Velocities<f64, 3>>()
         );
+    }
+
+    #[test]
+    fn test_get_by_index() {
+        let pos = Positions {
+            data: vec![
+                Vector3::new(1.0, 1.0, 1.0),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(0.5, 0.5, 0.5),
+            ],
+        };
+
+        assert_eq!(pos.get_by_idx(0), &Vector3::new(1.0, 1.0, 1.0));
+        assert_eq!(pos.get_by_idx(1), &Vector3::new(0.0, 0.0, 0.0));
+        assert_eq!(pos.get_by_idx(2), &Vector3::new(0.5, 0.5, 0.5));
     }
 }
