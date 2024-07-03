@@ -19,6 +19,10 @@ impl<T: Real> AtomTypeStore<T> {
     pub(super) fn len(&self) -> usize {
         self.data.len()
     }
+
+    pub(crate) fn get_by_idx(&self, idx: usize) -> &AtomType<T> {
+        &self.data[idx]
+    }
 }
 
 impl<T: Real> IntoIterator for AtomTypeStore<T> {
@@ -107,6 +111,11 @@ mod tests {
             assert_eq!(at.mass(), hydrogen.mass());
             assert_eq!(at.damping(), hydrogen.damping());
         });
+
+        // We must also be able to get the proper `AtomType` by index.
+        assert_eq!(1, little_store.get_by_idx(0).id());
+        assert_eq!(1.0, little_store.get_by_idx(0).mass());
+        assert_eq!(0.005, little_store.get_by_idx(0).damping());
 
         // Now let's create a bigger AtomTypeStore with a bunch of Argon atoms.
         let big_store = AtomTypeStoreBuilder::new().add_many(argon, 1000).build();
