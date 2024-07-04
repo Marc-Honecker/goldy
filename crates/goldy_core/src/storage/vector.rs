@@ -22,7 +22,7 @@ macro_rules! generate_structs {
             }
 
             /// Returns the length of the data
-            pub(crate) fn len(&self) -> usize {
+            pub fn len(&self) -> usize {
                 self.data.len()
             }
 
