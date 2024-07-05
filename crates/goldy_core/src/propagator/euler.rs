@@ -6,7 +6,7 @@ pub struct Euler;
 impl Propagator for Euler {
     fn integrate<T: Real, const D: usize>(
         atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
-        neighbor_list: &[&[usize]],
+        neighbor_list: &Vec<Vec<usize>>,
         sim_box: &crate::simulation_box::SimulationBox<T, D>,
         updater: &mut ForceUpdate<T, D>,
         dt: T,

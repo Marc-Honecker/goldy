@@ -20,7 +20,7 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     fn measure_energy(
         &self,
         x: &Positions<T, D>,
-        _: &[&[usize]],
+        _: &Vec<Vec<usize>>,
         _: &SimulationBox<T, D>,
         _: &AtomTypeStore<T>,
     ) -> T {
@@ -32,7 +32,7 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     fn update_forces(
         &self,
         x: &Positions<T, D>,
-        _: &[&[usize]],
+        _: &Vec<Vec<usize>>,
         f: &mut Forces<T, D>,
         _: &SimulationBox<T, D>,
         _: &AtomTypeStore<T>,

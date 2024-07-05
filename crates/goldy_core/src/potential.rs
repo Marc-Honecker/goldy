@@ -16,7 +16,7 @@ pub trait Potential<T: Real, const D: usize> {
     fn measure_energy(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &[&[usize]],
+        neighbor_list: &Vec<Vec<usize>>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) -> T;
@@ -25,7 +25,7 @@ pub trait Potential<T: Real, const D: usize> {
     fn update_forces(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &[&[usize]],
+        neighbor_list: &Vec<Vec<usize>>,
         f: &mut Forces<T, D>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
