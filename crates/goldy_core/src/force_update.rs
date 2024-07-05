@@ -1,9 +1,9 @@
+use crate::{
+    potential::Potential, Real, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore, thermo::ForceDrivenThermostat,
+};
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::Positions;
-use crate::{
-    potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
-    thermo::ForceDrivenThermostat, Real,
-};
 
 #[derive(Default)]
 pub struct ForceUpdate<T: Real, const D: usize> {
@@ -24,7 +24,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
     pub fn update_forces(
         &mut self,
         atom_store: &mut AtomStore<T, D>,
-        neighbor_list: &[&[usize]],
+        neighbor_list: &Vec<Vec<usize>>,
         sim_box: &SimulationBox<T, D>,
         temp: T,
         dt: T,
@@ -58,7 +58,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
     pub fn measure_energy(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &[&[usize]],
+        neighbor_list: &Vec<Vec<usize>>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) -> Option<T> {
