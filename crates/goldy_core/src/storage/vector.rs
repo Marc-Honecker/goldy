@@ -27,8 +27,7 @@ macro_rules! generate_structs {
             }
 
             /// Returns the element at the given index.
-            #[allow(unused)]
-            pub(crate) fn get_by_idx(&self, idx: usize) -> &SVector<T, D> {
+            pub fn get_by_idx(&self, idx: usize) -> &SVector<T, D> {
                 &self.data[idx]
             }
         }
