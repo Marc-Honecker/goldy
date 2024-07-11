@@ -47,7 +47,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
         if let Some(potential) = &self.potential {
             potential.update_forces(
                 &atom_store.x,
-                &neighbor_list,
+                neighbor_list,
                 &mut atom_store.f,
                 sim_box,
                 &atom_store.atom_types,
