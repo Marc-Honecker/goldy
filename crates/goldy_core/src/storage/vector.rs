@@ -1,4 +1,4 @@
-use std::fmt::{Display, LowerExp};
+use std::fmt::Display;
 
 use nalgebra::SVector;
 
@@ -85,7 +85,7 @@ macro_rules! generate_structs {
             }
         }
 
-        impl<T: Real + Display + LowerExp, const D: usize> $type_name<T, D> {
+        impl<T: Real + Display, const D: usize> $type_name<T, D> {
             /// Converts the data into a string representation.
             #[allow(unused)]
             pub(crate) fn convert_to_string(&self, atom_types: &AtomTypeStore<T>) -> String {
@@ -99,7 +99,7 @@ macro_rules! generate_structs {
                         contents.push_str(format!("{: >10}{: >10}", id + 1, at.id()).as_str());
 
                         x.iter()
-                            .for_each(|x| contents.push_str(format!("{x: >20.6e}").as_str()));
+                            .for_each(|x| contents.push_str(format!("{x: >20.6}").as_str()));
                         contents.push('\n');
                     });
 
@@ -248,9 +248,9 @@ mod tests {
 
         assert_eq!(
             pos.convert_to_string(&atom_types),
-            r"         1         1          1.000000e0          2.000000e0          3.000000e0
-         2         1          4.000000e0          5.000000e0          6.000000e0
-         3         1          7.000000e0          8.000000e0          9.000000e0
+            r"         1         1            1.000000            2.000000            3.000000
+         2         1            4.000000            5.000000            6.000000
+         3         1            7.000000            8.000000            9.000000
 "
         );
     }
