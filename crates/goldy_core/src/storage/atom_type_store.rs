@@ -10,6 +10,11 @@ pub struct AtomTypeStore<T: Real> {
 }
 
 impl<T: Real> AtomTypeStore<T> {
+    /// Returns the number of types.
+    pub fn number_types(&self) -> usize {
+        self.data.len()
+    }
+
     /// Returns an iterator over the `AtomType`s.
     pub fn iter(&self) -> Iter<AtomType<T>> {
         Iter::new(self.data.iter())
