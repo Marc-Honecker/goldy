@@ -1,6 +1,9 @@
+use std::fmt::{Display, LowerExp};
+
 use nalgebra::SVector;
 
 use crate::Real;
+use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::iterator::{Iter, IterMut};
 
 macro_rules! generate_structs {
@@ -24,6 +27,11 @@ macro_rules! generate_structs {
             /// Returns the length of the data
             pub fn len(&self) -> usize {
                 self.data.len()
+            }
+
+            /// Tests, if the data is empty.
+            pub fn is_empty(&self) -> bool {
+                self.data.is_empty()
             }
 
             /// Returns the element at the given index.
@@ -76,6 +84,28 @@ macro_rules! generate_structs {
                 }
             }
         }
+
+        impl<T: Real + Display + LowerExp, const D: usize> $type_name<T, D> {
+            /// Converts the data into a string representation.
+            #[allow(unused)]
+            pub(crate) fn convert_to_string(&self, atom_types: &AtomTypeStore<T>) -> String {
+                let mut contents = String::new();
+
+                self.data
+                    .iter()
+                    .zip(atom_types)
+                    .enumerate()
+                    .for_each(|(id, (x, at))| {
+                        contents.push_str(format!("{: >10}{: >10}", id + 1, at.id()).as_str());
+
+                        x.iter()
+                            .for_each(|x| contents.push_str(format!("{: >20.6e}", x).as_str()));
+                        contents.push('\n');
+                    });
+
+                contents
+            }
+        }
     };
 }
 
@@ -86,6 +116,9 @@ generate_structs!(Forces);
 #[cfg(test)]
 mod tests {
     use nalgebra::Vector3;
+
+    use crate::storage::atom_type::AtomTypeBuilder;
+    use crate::storage::atom_type_store::AtomTypeStoreBuilder;
 
     use super::*;
 
@@ -189,5 +222,36 @@ mod tests {
         assert_eq!(pos.get_by_idx(0), &Vector3::new(1.0, 1.0, 1.0));
         assert_eq!(pos.get_by_idx(1), &Vector3::new(0.0, 0.0, 0.0));
         assert_eq!(pos.get_by_idx(2), &Vector3::new(0.5, 0.5, 0.5));
+    }
+
+    #[test]
+    fn test_convert_to_string() {
+        let pos = Positions {
+            data: vec![
+                Vector3::new(1.0, 2.0, 3.0),
+                Vector3::new(4.0, 5.0, 6.0),
+                Vector3::new(7.0, 8.0, 9.0),
+            ],
+        };
+
+        let atom_types = AtomTypeStoreBuilder::default()
+            .add_many(
+                AtomTypeBuilder::default()
+                    .id(1)
+                    .mass(39.95)
+                    .damping(0.01)
+                    .build()
+                    .unwrap(),
+                3,
+            )
+            .build();
+
+        assert_eq!(
+            pos.convert_to_string(&atom_types),
+            r"         1         1          1.000000e0          2.000000e0          3.000000e0
+         2         1          4.000000e0          5.000000e0          6.000000e0
+         3         1          7.000000e0          8.000000e0          9.000000e0
+"
+        );
     }
 }
