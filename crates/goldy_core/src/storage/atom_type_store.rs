@@ -12,7 +12,15 @@ pub struct AtomTypeStore<T: Real> {
 impl<T: Real> AtomTypeStore<T> {
     /// Returns the number of types.
     pub fn number_types(&self) -> usize {
-        self.data.len()
+        let mut seen_ids = Vec::new();
+
+        self.data.iter().for_each(|at| {
+            if !seen_ids.contains(&at.id()) {
+                seen_ids.push(at.id())
+            }
+        });
+
+        seen_ids.len()
     }
 
     /// Returns an iterator over the `AtomType`s.
@@ -135,5 +143,72 @@ mod tests {
             assert_eq!(at.mass(), argon.mass());
             assert_eq!(at.damping(), argon.damping());
         }
+    }
+
+    #[test]
+    fn test_number_types() {
+        // creating an `AtomTypeStore` with only one type and one atom
+        let ats1 = AtomTypeStoreBuilder::default()
+            .add(
+                AtomTypeBuilder::default()
+                    .mass(1.0)
+                    .damping(0.01)
+                    .id(0)
+                    .build()
+                    .unwrap(),
+            )
+            .build();
+
+        assert_eq!(ats1.number_types(), 1);
+
+        // now we create an `AtomTypeStore` with 500 atoms, but still only
+        // one type
+        let ats2 = AtomTypeStoreBuilder::default()
+            .add_many(
+                AtomTypeBuilder::default()
+                    .mass(39.95)
+                    .damping(0.01)
+                    .id(1)
+                    .build()
+                    .unwrap(),
+                500,
+            )
+            .build();
+
+        assert_eq!(ats2.number_types(), 1);
+
+        // finally, we create an `AtomTypeStore` with multiple atoms and
+        // multiple types
+        let ats3 = AtomTypeStoreBuilder::default()
+            .add(
+                AtomTypeBuilder::default()
+                    .id(0)
+                    .mass(1.0)
+                    .damping(0.01)
+                    .build()
+                    .unwrap(),
+            )
+            .add_many(
+                AtomTypeBuilder::default()
+                    .id(1)
+                    .mass(39.95)
+                    .damping(0.01)
+                    .build()
+                    .unwrap(),
+                500,
+            )
+            .add_many(
+                AtomTypeBuilder::default()
+                    .id(2)
+                    .mass(4.0)
+                    .damping(0.01)
+                    .build()
+                    .unwrap(),
+                100,
+            )
+            .build();
+
+        // here we should get exactly 3 different types
+        assert_eq!(ats3.number_types(), 3);
     }
 }
