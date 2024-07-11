@@ -99,7 +99,7 @@ macro_rules! generate_structs {
                         contents.push_str(format!("{: >10}{: >10}", id + 1, at.id()).as_str());
 
                         x.iter()
-                            .for_each(|x| contents.push_str(format!("{: >20.6e}", x).as_str()));
+                            .for_each(|x| contents.push_str(format!("{x: >20.6e}").as_str()));
                         contents.push('\n');
                     });
 
