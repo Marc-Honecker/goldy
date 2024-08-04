@@ -1,3 +1,5 @@
 /target
 Cargo.lock
 .idea/
+*.out
+crates/test_outputs
