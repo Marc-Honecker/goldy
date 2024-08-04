@@ -1,15 +1,15 @@
 use nalgebra::{ComplexField, SVector};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
-use rand_distr::{uniform::SampleUniform, Distribution, Uniform};
+use rand_distr::{Distribution, Uniform, uniform::SampleUniform};
 
 use crate::{
+    Real,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Velocities},
     },
     thermo::ForceDrivenThermostat,
-    Real,
 };
 
 pub struct Langevin<T>
