@@ -47,7 +47,7 @@ impl<T: Real> PairPotential<T> {
     }
 
     /// Dumps the `PairPotential` into the file.
-    pub fn dump_in_file(&self, filename: &str) {
+    pub fn write_to_file(&self, filename: &str) {
         let mut file = File::create(filename).unwrap();
 
         let mut contents = String::new();
@@ -58,7 +58,7 @@ impl<T: Real> PairPotential<T> {
             .enumerate()
             .for_each(|(idx, (energy, force))| {
                 let r = Float::sqrt(if idx == 0 {
-                    T::from(1e-6).unwrap()
+                    T::from(1e-4).unwrap()
                 } else {
                     self.dr * T::from(idx).unwrap()
                 });
@@ -113,7 +113,7 @@ macro_rules! create_pair_potential {
                     .for_each(|(idx, (energy, force))| {
                         // computing the current distance
                         let r_sq = if idx == 0 {
-                            T::from(1e-6).unwrap()
+                            T::from(1e-4).unwrap()
                         } else {
                             dr * T::from(idx).unwrap()
                         };
@@ -128,17 +128,17 @@ macro_rules! create_pair_potential {
                             r0,
                             n as i32,
                             m as i32,
-                            Float::sqrt(r_sq * (T::one() - T::from(1e-6).unwrap())),
+                            Float::sqrt(r_sq * (T::one() - T::from(1e-5).unwrap())),
                         );
                         let right = Self::$func_name(
                             u0,
                             r0,
                             n as i32,
                             m as i32,
-                            Float::sqrt(r_sq * (T::one() + T::from(1e-6).unwrap())),
+                            Float::sqrt(r_sq * (T::one() + T::from(1e-5).unwrap())),
                         );
 
-                        *force = (right - left) / (T::from(1e-6).unwrap() * r_sq);
+                        *force = (right - left) / (T::from(1e-5).unwrap() * r_sq);
                     });
 
                 Self {
