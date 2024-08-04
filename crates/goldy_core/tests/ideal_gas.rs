@@ -16,6 +16,7 @@ fn ideal_gas() {
     let dt = 0.01;
     let temp = 1.0;
     let runs = 500_000;
+    let warm_up = 100_000;
 
     // Argon
     let at = AtomTypeBuilder::default()
@@ -40,7 +41,7 @@ fn ideal_gas() {
     let mut tkin_1 = 0.0;
 
     // the main MD-loop
-    for _ in 0..runs {
+    for i in 0..runs {
         // propagating the system in time
         VelocityVerlet::integrate(
             &mut system.atoms,
@@ -51,21 +52,23 @@ fn ideal_gas() {
             temp,
         );
 
-        // measuring the kinetic energy
-        let tkin_mean = 0.5
-            * system
-                .atoms
-                .v
-                .iter()
-                .zip(&system.atoms.atom_types)
-                .map(|(&v, &t)| t.mass() * v.dot(&v))
-                .sum::<f32>();
+        if i >= warm_up {
+            // measuring the kinetic energy
+            let tkin_mean = 0.5
+                * system
+                    .atoms
+                    .v
+                    .iter()
+                    .zip(&system.atoms.atom_types)
+                    .map(|(&v, &t)| t.mass() * v.dot(&v))
+                    .sum::<f32>();
 
-        // updating the moments
-        tkin_1 += tkin_mean;
+            // updating the moments
+            tkin_1 += tkin_mean;
+        }
     }
 
-    tkin_1 /= (runs * system.number_of_atoms()) as f32;
+    tkin_1 /= ((runs - warm_up) * system.number_of_atoms()) as f32;
 
     // this should hold
     let analytical_solution = 1.5 * temp;
