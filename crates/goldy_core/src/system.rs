@@ -1,6 +1,11 @@
+use std::fmt::Display;
+use std::fs::File;
+use std::io::Write;
+
 use nalgebra::{SMatrix, SVector};
 
 use crate::{
+    Real,
     simulation_box::{BoundaryTypes, SimulationBox, SimulationBoxBuilder},
     storage::{
         atom_store::{AtomStore, AtomStoreBuilder},
@@ -8,7 +13,6 @@ use crate::{
         atom_type_store::AtomTypeStoreBuilder,
         vector::{Forces, Positions, Velocities},
     },
-    Real,
 };
 
 pub struct System<T: Real, const D: usize> {
@@ -28,10 +32,9 @@ impl<T: Real, const D: usize> System<T, D> {
         // creating the SimulationBox
         let sim_box = SimulationBoxBuilder::default()
             .hmatrix(SMatrix::from_diagonal(&SVector::from_iterator(
-                crystals.iter().map(|&x| {
-                    lattice_constant * T::from_usize(x).unwrap()
-                        + lattice_constant / T::from(2.0).unwrap()
-                }),
+                crystals
+                    .iter()
+                    .map(|&x| lattice_constant * T::from_usize(x).unwrap() + lattice_constant),
             )))
             .boundary_type(boundary_type)
             .build()
@@ -42,7 +45,8 @@ impl<T: Real, const D: usize> System<T, D> {
 
         // creating the positions
         let crystals = crystals.data.0[0];
-        let mut x = vec![SVector::zeros(); num_atoms];
+        let mut x =
+            vec![SVector::from_element(lattice_constant / T::from(2.0).unwrap()); num_atoms];
         Self::rec_cubic(&mut x, lattice_constant, SVector::zeros(), crystals, D);
         let x = Positions::from_iter(x);
 
@@ -118,12 +122,115 @@ impl<T: Real, const D: usize> System<T, D> {
     }
 }
 
+impl<T, const D: usize> System<T, D>
+where
+    T: Real + rand_distr::uniform::SampleUniform,
+{
+    /// Creates a `D`-dimensional `System` with one `AtomType` and random atom `Positions`.
+    pub fn new_random(
+        lengths: SVector<T, D>,
+        boundary_type: BoundaryTypes,
+        atom_type: AtomType<T>,
+        num_atoms: usize,
+    ) -> Self {
+        // creating the specified `SimulationBox`
+        let sim_box = SimulationBoxBuilder::default()
+            .hmatrix(SMatrix::from_diagonal(&lengths))
+            .boundary_type(boundary_type)
+            .build()
+            .expect("Building the SimulationBox should have worked");
+
+        // creating the positions
+        let x = Positions::new_uniform(&lengths, num_atoms);
+
+        // initialising the rest
+        let v = Velocities::zeros(num_atoms);
+        let f = Forces::zeros(num_atoms);
+        let atom_types = AtomTypeStoreBuilder::new()
+            .add_many(atom_type, num_atoms)
+            .build();
+
+        let atoms = AtomStoreBuilder::default()
+            .positions(x)
+            .velocities(v)
+            .forces(f)
+            .atom_types(atom_types)
+            .build()
+            .expect("Could not build AtomStore");
+
+        Self { atoms, sim_box }
+    }
+}
+
+impl<T: Real + Display> System<T, 3> {
+    /// Writes the simulation data to file.
+    pub fn write_system_to_file(&self, filename: &str) {
+        // creating the file, if possible
+        let mut file =
+            File::create(filename).expect("Please make sure, that the given path exists");
+
+        // stores the contents
+        let mut contents = String::new();
+
+        // adding a comment
+        contents.push_str("LAMMPS comment style\n\n");
+
+        // adding the number of atoms and number of types
+        contents.push_str(format!("{: >10} atoms\n", self.number_of_atoms()).as_str());
+        contents.push_str(
+            format!(
+                "{: >10} atom types\n\n",
+                self.atoms.atom_types.number_types()
+            )
+            .as_str(),
+        );
+
+        // adding the simulation cell
+        contents.push_str(self.sim_box.convert_to_string().as_str());
+        contents.push_str("0 0 0 xy xz yz\n");
+        contents.push('\n');
+
+        // adding the masses
+        contents.push_str("Masses\n\n");
+
+        self.atoms
+            .atom_types
+            .get_masses()
+            .iter()
+            .for_each(|(id, mass)| {
+                contents.push_str(format!("{id:>6}{mass:>10.3}\n").as_str());
+            });
+
+        // adding the `Positions`
+        contents.push_str("\nAtoms\n\n");
+        contents.push_str(
+            self.atoms
+                .x
+                .convert_to_string(&self.atoms.atom_types)
+                .as_str(),
+        );
+
+        // adding the `Velocities`
+        contents.push_str("\nVelocities\n\n");
+        contents.push_str(
+            self.atoms
+                .v
+                .convert_to_string(&self.atoms.atom_types)
+                .as_str(),
+        );
+
+        // finally, we can write out all the contents on disk
+        file.write_all(contents.as_bytes()).unwrap();
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::iter::Zip;
+
     use assert_approx_eq::assert_approx_eq;
     use nalgebra::Vector3;
     use num_traits::Zero;
-    use std::iter::Zip;
 
     use crate::storage::atom_type::AtomTypeBuilder;
 
@@ -255,5 +362,23 @@ mod tests {
 
         // Let's see, if every atom lies in the `SimulationBox`.
         cubic_system.validate();
+    }
+
+    #[test]
+    fn test_build_random() {
+        let system = System::new_random(
+            Vector3::new(10.0, 20.0, 30.0),
+            BoundaryTypes::Periodic,
+            AtomTypeBuilder::default()
+                .id(0)
+                .damping(0.01)
+                .mass(1.0)
+                .build()
+                .unwrap(),
+            10_000,
+        );
+
+        // all atoms must lie in the `SimulationCell` after creation
+        system.validate();
     }
 }
