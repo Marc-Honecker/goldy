@@ -23,6 +23,22 @@ impl<T: Real> AtomTypeStore<T> {
         seen_ids.len()
     }
 
+    /// Returns all Pairs of `AtomType`.id() and the masses.
+    /// For efficiency, if you need the number of types and the
+    /// pairs of ids, masses, consider using this method, since
+    /// self.number_types() == self.get_masses().len()
+    pub fn get_masses(&self) -> Vec<(u32, T)> {
+        let mut seen_pairs = Vec::new();
+
+        self.data.iter().for_each(|at| {
+            if !seen_pairs.contains(&(at.id(), at.mass())) {
+                seen_pairs.push((at.id(), at.mass()))
+            }
+        });
+
+        seen_pairs
+    }
+
     /// Returns an iterator over the `AtomType`s.
     pub fn iter(&self) -> Iter<AtomType<T>> {
         Iter::new(self.data.iter())
