@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use derive_builder::Builder;
 use nalgebra as na;
 use nalgebra::{SMatrix, SVector};
@@ -27,16 +29,17 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         match self.boundary_type {
             // Periodic boundaries are currently the only special cases.
             BoundaryTypes::Periodic => {
-                // making two local copies
+                /*                // making two local copies
                 let mut x1 = *x1;
                 let mut x2 = *x2;
 
-                // wrapping them around
-                self.wrap_around(&mut x1);
-                self.wrap_around(&mut x2);
+                // setting them back
+                self.set_back_to_cell(&mut x1);
+                self.set_back_to_cell(&mut x2);
 
                 // and computing the squared norm
-                (x1 - x2).norm_squared()
+                (x1 - x2).norm_squared()*/
+                self.difference(x1, x2).norm_squared()
             }
             // Here, everything is normal.
             BoundaryTypes::Open => (x1 - x2).norm_squared(),
@@ -55,7 +58,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     pub fn apply_boundary_conditions(&self, x: &mut Positions<T, D>) {
         match self.boundary_type {
             BoundaryTypes::Periodic => {
-                x.iter_mut().for_each(|x| self.wrap_around(x));
+                x.iter_mut().for_each(|x| self.set_back_to_cell(x));
             }
             BoundaryTypes::Open => {
                 // nothing to do!
@@ -76,6 +79,17 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         }
     }
 
+    /// Computes the difference of the two given `SVector`s w.r.t. to the boundary conditions.
+    fn difference(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> SVector<T, D> {
+        let mut d = self.to_relative(x1 - x2);
+
+        d.iter_mut().for_each(|x| {
+            *x -= na::ComplexField::round(*x);
+        });
+
+        self.to_real(d)
+    }
+
     /// Returns a relative `SVector`.
     #[inline]
     fn to_relative(&self, x: SVector<T, D>) -> SVector<T, D> {
@@ -88,9 +102,9 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         self.hmatrix * x
     }
 
-    /// Wraps a `SVector` s.t. it obeys PBC.
+    /// Sets a `SVector` back into the simulation cell
     #[inline]
-    fn wrap_around(&self, x: &mut SVector<T, D>) {
+    fn set_back_to_cell(&self, x: &mut SVector<T, D>) {
         *x = self.to_relative(*x);
 
         x.iter_mut().for_each(|x| {
@@ -100,6 +114,34 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         });
 
         *x = self.to_real(*x);
+    }
+}
+
+impl<T: Real + Display> SimulationBox<T, 3> {
+    /// Returns a string representation of the `SimulationBox` boundaries.
+    pub(crate) fn convert_to_string(&self) -> String {
+        let (p1, p2) = (
+            // the 'lower left' point of the simulation cell in reduced coordinates
+            SVector::<T, 3>::zeros(),
+            // the 'upper right' point of the simulation cell in reduced coordinates
+            SVector::<T, 3>::from_element(T::one()),
+        );
+
+        // converting them to real space
+        let (p1, p2) = (self.to_real(p1), self.to_real(p2));
+
+        let mut contents = String::new();
+
+        let names = ["xlo xhi", "ylo yhi", "zlo zhi"];
+        p1.iter()
+            .zip(&p2)
+            .zip(&names)
+            .for_each(|((&p1, &p2), &name)| {
+                contents.push_str(format!("{p1: <14.5} {p2:14.5} {name}").as_str());
+                contents.push('\n');
+            });
+
+        contents
     }
 }
 
@@ -182,7 +224,7 @@ mod tests {
 
         // Now let's run the tests with periodic boundaries.
         let periodic_sim_box = SimulationBoxBuilder::<f64, 2>::default()
-            .hmatrix(SMatrix::from_diagonal_element(15.0))
+            .hmatrix(SMatrix::from_diagonal_element(10.0))
             .boundary_type(BoundaryTypes::Periodic)
             .build()
             .unwrap();
@@ -196,18 +238,36 @@ mod tests {
         assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 50.0.sqrt());
         assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 50.0.sqrt());
 
+        // testing exactly at the boundaries
+        let x1 = SVector::<f64, 2>::from_iterator([0.0, 10.0]);
+        let x2 = SVector::<f64, 2>::from_iterator([10.0, 0.0]);
+
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 0.0);
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 0.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 0.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 0.0);
+
         // Setting up positions, s.t. periodic boundaries kick in.
-        let x1 = SVector::<f64, 2>::from_iterator([1.0, 18.0]);
-        let x2 = SVector::<f64, 2>::from_iterator([18.0, 1.0]);
+        let x1 = SVector::<f64, 2>::from_iterator([1.0, 1.0]);
+        let x2 = SVector::<f64, 2>::from_iterator([9.0, 9.0]);
+        let x3 = SVector::<f64, 2>::from_iterator([-1.0, -1.0]);
 
         assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 8.0);
         assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 8.0);
+        assert_approx_eq!(
+            periodic_sim_box.sq_distance(&x1, &x2),
+            periodic_sim_box.sq_distance(&x1, &x3)
+        );
+        assert_approx_eq!(
+            periodic_sim_box.sq_distance(&x2, &x1),
+            periodic_sim_box.sq_distance(&x1, &x3)
+        );
         assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 8.0.sqrt());
         assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 8.0.sqrt());
 
         // The implementation should also work for positions which are far outside.
-        let x1 = SVector::<f64, 2>::from_iterator([-44.0, -45.0]);
-        let x2 = SVector::<f64, 2>::from_iterator([45.0, 46.0]);
+        let x1 = SVector::<f64, 2>::from_iterator([-39.0, -30.0]);
+        let x2 = SVector::<f64, 2>::from_iterator([40.0, 41.0]);
 
         assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 2.0);
         assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 2.0);
@@ -216,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn test_wrap_around() {
+    fn test_set_back_to_cell() {
         // defining a 10x10x10 simulation box with periodic boundaries
         let simulation_box = SimulationBoxBuilder::default()
             .hmatrix(Matrix3::from_diagonal_element(10.0))
@@ -229,9 +289,9 @@ mod tests {
         let mut x2 = Vector3::new(0.0, 0.0, 0.0);
         let mut x3 = Vector3::new(10.0, 10.0, 10.0);
 
-        simulation_box.wrap_around(&mut x1);
-        simulation_box.wrap_around(&mut x2);
-        simulation_box.wrap_around(&mut x3);
+        simulation_box.set_back_to_cell(&mut x1);
+        simulation_box.set_back_to_cell(&mut x2);
+        simulation_box.set_back_to_cell(&mut x3);
 
         // ... so these assertions must hold.
         assert_eq!(round_vector(&x1), Vector3::new(1.0, 1.0, 1.0));
@@ -242,8 +302,8 @@ mod tests {
         let mut x4 = Vector3::new(11.0, 9.0, 16.0);
         let mut x5 = Vector3::new(20.0, 23.0, 37.0);
 
-        simulation_box.wrap_around(&mut x4);
-        simulation_box.wrap_around(&mut x5);
+        simulation_box.set_back_to_cell(&mut x4);
+        simulation_box.set_back_to_cell(&mut x5);
 
         assert_eq!(round_vector(&x4), Vector3::new(1.0, 9.0, 6.0));
         assert_eq!(round_vector(&x5), Vector3::new(0.0, 3.0, 7.0));
@@ -253,9 +313,9 @@ mod tests {
         let mut x7 = Vector3::new(-21.0, -14.0, -39.0);
         let mut x8 = Vector3::new(-5.0, -5.0, -5.0);
 
-        simulation_box.wrap_around(&mut x6);
-        simulation_box.wrap_around(&mut x7);
-        simulation_box.wrap_around(&mut x8);
+        simulation_box.set_back_to_cell(&mut x6);
+        simulation_box.set_back_to_cell(&mut x7);
+        simulation_box.set_back_to_cell(&mut x8);
 
         assert_eq!(round_vector(&x6), Vector3::new(7.0, 3.0, 0.0));
         assert_eq!(round_vector(&x7), Vector3::new(9.0, 6.0, 1.0));
@@ -311,5 +371,22 @@ mod tests {
         x.iter_mut().for_each(|x| *x = na::ComplexField::round(*x));
 
         x
+    }
+
+    #[test]
+    fn test_convert_to_string() {
+        let simulation_box = SimulationBoxBuilder::default()
+            .hmatrix(Matrix3::from_diagonal(&Vector3::new(10.0, 20.0, 30.0)))
+            .boundary_type(BoundaryTypes::Periodic)
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            simulation_box.convert_to_string(),
+            r"0.00000              10.00000 xlo xhi
+0.00000              20.00000 ylo yhi
+0.00000              30.00000 zlo zhi
+"
+        );
     }
 }
