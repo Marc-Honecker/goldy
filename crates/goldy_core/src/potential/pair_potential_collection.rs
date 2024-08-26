@@ -1,5 +1,10 @@
 use derive_builder::Builder;
+use nalgebra::SVector;
 
+use crate::potential::Potential;
+use crate::simulation_box::SimulationBox;
+use crate::storage::atom_type_store::AtomTypeStore;
+use crate::storage::vector::{Forces, Positions};
 use crate::{potential::pair_potential::PairPotential, storage::atom_type::AtomType, Real};
 
 #[derive(Builder)]
@@ -9,6 +14,71 @@ pub struct PairPotentialCollection<T: Real> {
     atom_type_ids: Vec<(u32, u32)>,
     #[builder(setter(custom))]
     pair_potentials: Vec<PairPotential<T>>,
+}
+
+impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
+    fn measure_energy(
+        &self,
+        x: &Positions<T, D>,
+        neighbor_list: &Vec<Vec<usize>>,
+        sim_box: &SimulationBox<T, D>,
+        atom_types: &AtomTypeStore<T>,
+    ) -> T {
+        // Iterating over all given atom-types, positions and the neighbor-list.
+        atom_types.iter().zip(x).zip(neighbor_list).fold(
+            // Initializing the accumulator to zero.
+            T::zero(),
+            |acc, ((curr_atom_type, curr_pos), neighbors)| {
+                // computing the energies off the curr_pos/neighbor pairs and updating the energy
+                acc + neighbors.iter().fold(T::zero(), |acc, &neighbor_idx| {
+                    // retrieving the neighbor position
+                    let neighbor_pos = x.get_by_idx(neighbor_idx);
+                    // retrieving the neighbor type
+                    let neighbor_type = atom_types.get_by_idx(neighbor_idx);
+
+                    // evaluating the potential energy and updating the energy
+                    acc + self
+                        .get_pair_potential(curr_atom_type, neighbor_type)
+                        .expect("Please provide a proper amount of `AtomType`s.")
+                        .energy(sim_box.sq_distance(curr_pos, neighbor_pos))
+                })
+            },
+        )
+    }
+
+    fn update_forces(
+        &self,
+        x: &Positions<T, D>,
+        neighbor_list: &Vec<Vec<usize>>,
+        f: &mut Forces<T, D>,
+        sim_box: &SimulationBox<T, D>,
+        atom_types: &AtomTypeStore<T>,
+    ) {
+        f.iter_mut()
+            .zip(x)
+            .zip(neighbor_list)
+            .zip(atom_types)
+            .for_each(|(((f, curr_pos), neighbors), curr_atom_type)| {
+                *f -= neighbors
+                    .iter()
+                    .fold(SVector::zeros(), |acc, &neighbor_idx| {
+                        // retrieving the neighbor position
+                        let neighbor_pos = x.get_by_idx(neighbor_idx);
+                        // retrieving the neighbor type
+                        let neighbor_type = atom_types.get_by_idx(neighbor_idx);
+
+                        // evaluating the potential energy and updating the energy
+                        let pseudo_force = self
+                            .get_pair_potential(curr_atom_type, neighbor_type)
+                            .expect("Please provide a proper amount of `AtomType`s.")
+                            .pseudo_force(sim_box.sq_distance(curr_pos, neighbor_pos));
+
+                        // updating the force
+                        // FIXME
+                        acc + sim_box.difference(curr_pos, neighbor_pos) * pseudo_force
+                    });
+            });
+    }
 }
 
 impl<T: Real> PairPotentialCollection<T> {

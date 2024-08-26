@@ -4,7 +4,7 @@ use derive_builder::Builder;
 use nalgebra as na;
 use nalgebra::{SMatrix, SVector};
 
-use crate::{Real, storage::vector::Positions};
+use crate::{storage::vector::Positions, Real};
 
 #[derive(Debug, Builder, PartialEq, Eq)]
 pub struct SimulationBox<T: Real, const D: usize> {
@@ -72,7 +72,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
             BoundaryTypes::Periodic => {
                 let x = self.to_relative(*x);
 
-                x.iter().all(|&x| T::zero() <= x && x <= T::one())
+                x.iter().all(|x| (T::zero()..=T::one()).contains(x))
             }
             // This case is trivial
             BoundaryTypes::Open => true,
@@ -80,7 +80,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     }
 
     /// Computes the difference of the two given `SVector`s w.r.t. to the boundary conditions.
-    fn difference(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> SVector<T, D> {
+    pub fn difference(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> SVector<T, D> {
         let mut d = self.to_relative(x1 - x2);
 
         d.iter_mut().for_each(|x| {
@@ -108,7 +108,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         *x = self.to_relative(*x);
 
         x.iter_mut().for_each(|x| {
-            if *x > T::one() || *x < T::zero() {
+            if !(T::zero()..=T::one()).contains(x) {
                 *x -= na::ComplexField::floor(*x);
             }
         });
@@ -368,7 +368,7 @@ mod tests {
     fn round_vector<T: Real, const D: usize>(x: &SVector<T, D>) -> SVector<T, D> {
         let mut x = *x;
 
-        x.iter_mut().for_each(|x| *x = na::ComplexField::round(*x));
+        x.iter_mut().for_each(|x| *x = ComplexField::round(*x));
 
         x
     }

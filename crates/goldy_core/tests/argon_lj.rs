@@ -1,7 +1,8 @@
-use goldy_core::propagator::euler::Euler;
+use goldy_core::propagator::velocity_verlet::VelocityVerlet;
 use goldy_core::simulation_box::SimulationBox;
 use goldy_core::storage::vector::Positions;
 use goldy_core::thermo::langevin::Langevin;
+use goldy_core::Real;
 
 #[test]
 fn argon_lennard_jones() {
@@ -23,13 +24,14 @@ fn argon_lennard_jones() {
     // simulation parameters
     let dt = 1e-2;
     let temp = 1.0;
-    let runs = 30_000;
+    let runs = 40_000;
+    let warm_ups = 8_000;
     let cutoff = 7.85723;
 
     // Argon
     let at = AtomTypeBuilder::default()
         .id(1)
-        .damping(1e0)
+        .damping(5e-3)
         .mass(39.95)
         .build()
         .unwrap();
@@ -40,18 +42,14 @@ fn argon_lennard_jones() {
 
     // Lennard-Jones pair-potential
     let pair_potential = PairPotentialCollectionBuilder::default()
-        .add_potential(
-            &at,
-            &at,
-            PairPotential::new_lennard_jones(120.0, 3.92862, cutoff),
-        )
+        .add_potential(&at, &at, lj)
         .build()
         .unwrap();
 
     // the atoms
     let mut system = System::new_cubic(
-        Vector3::new(10, 10, 10),
-        cutoff / 2.0,
+        Vector3::new(6, 6, 6),
+        cutoff * 0.8,
         BoundaryTypes::Periodic,
         at,
     );
@@ -65,7 +63,7 @@ fn argon_lennard_jones() {
     // creating the updater
     let mut updater = ForceUpdateBuilder::default()
         .thermostat(Box::new(langevin))
-        .potential(Box::new(pair_potential))
+        // .potential(Box::new(pair_potential))
         .build();
 
     // kinetic energy moments
@@ -73,17 +71,17 @@ fn argon_lennard_jones() {
 
     // the main MD-loop
     for i in 0..runs {
-        if i % 20 == 0 {
-            // update the neighbor-list every 20 time-steps
-            neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, cutoff);
-        }
-        if i % 50 == 0 {
+        // if i % 2 == 0 {
+        //     // update the neighbor-list every 20 time-steps
+        //     neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, cutoff);
+        // }
+        if i % 200 == 0 {
             // writing out the simulation cell
             system.write_system_to_file(format!("test_outputs/cubic_cell_{i}.out").as_str());
         }
 
         // propagating the system in time
-        Euler::integrate(
+        VelocityVerlet::integrate(
             &mut system.atoms,
             &neighbor_list,
             &system.sim_box,
@@ -92,20 +90,23 @@ fn argon_lennard_jones() {
             temp,
         );
 
-        // measuring the kinetic energy
-        let tkin_mean = 0.5
-            * system
-                .atoms
-                .v
-                .iter()
-                .zip(&system.atoms.atom_types)
-                .map(|(&v, &t)| t.mass() * v.dot(&v))
-                .sum::<f32>();
+        if i > warm_ups {
+            // measuring the kinetic energy
+            // TODO: move to Observer
+            let tkin_mean = 0.5
+                * system
+                    .atoms
+                    .v
+                    .iter()
+                    .zip(&system.atoms.atom_types)
+                    .map(|(&v, &t)| t.mass() * v.dot(&v))
+                    .sum::<f32>();
 
-        println!("{}", tkin_mean / system.number_of_atoms() as f32);
+            // println!("{i}, {}", tkin_mean / system.number_of_atoms() as f32);
 
-        // updating the moments
-        tkin_1 += tkin_mean;
+            // updating the moments
+            tkin_1 += tkin_mean;
+        }
 
         // applying periodic boundary conditions
         system
@@ -116,17 +117,19 @@ fn argon_lennard_jones() {
         assert!(system.validate())
     }
 
-    tkin_1 /= (runs * system.number_of_atoms()) as f32;
+    tkin_1 /= ((runs - warm_ups) * system.number_of_atoms()) as f32;
+
+    println!("{tkin_1}");
 
     // this should hold
     let analytical_solution = 1.5 * temp;
-    assert_approx_eq!(analytical_solution, tkin_1, 1e-3 * analytical_solution);
+    assert_approx_eq!(analytical_solution, tkin_1, 1e-6 * analytical_solution);
 }
 
-fn compute_neighbor_list(
-    x: &Positions<f32, 3>,
-    simulation_box: &SimulationBox<f32, 3>,
-    max_cutoff: f32,
+fn compute_neighbor_list<T: Real>(
+    x: &Positions<T, 3>,
+    simulation_box: &SimulationBox<T, 3>,
+    max_cutoff: T,
 ) -> Vec<Vec<usize>> {
     let mut neighbor_list = vec![Vec::new(); x.len()];
 
@@ -134,7 +137,7 @@ fn compute_neighbor_list(
         for (idx, x2) in x.iter().enumerate() {
             let sq_dist = simulation_box.sq_distance(x1, x2);
 
-            if sq_dist <= max_cutoff && sq_dist > 0.0 {
+            if sq_dist <= max_cutoff && sq_dist > T::zero() {
                 nl.push(idx);
             }
         }

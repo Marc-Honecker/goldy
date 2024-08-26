@@ -1,15 +1,15 @@
 use nalgebra::{ComplexField, SVector};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
-use rand_distr::{Distribution, Uniform, uniform::SampleUniform};
+use rand_distr::{uniform::SampleUniform, Distribution, Uniform};
 
 use crate::{
-    Real,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Velocities},
     },
     thermo::ForceDrivenThermostat,
+    Real,
 };
 
 pub struct Langevin<T>
@@ -54,6 +54,10 @@ where
 
             // Drawing the random vector.
             let rand_vec = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
+
+            rand_vec
+                .iter()
+                .for_each(|x| assert!((-T::one()..=T::one()).contains(x)));
 
             // adding the random forces
             *f += rand_vec * ComplexField::sqrt(T::from(6).unwrap() * dp / dt * temp);

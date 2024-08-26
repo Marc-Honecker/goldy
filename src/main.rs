@@ -3,7 +3,7 @@ use nalgebra::Vector3;
 use goldy_core::{
     force_update::ForceUpdateBuilder,
     potential::harmonic_oscillator::HarmonicOscillatorBuilder,
-    propagator::{velocity_verlet::VelocityVerlet, Propagator},
+    propagator::{Propagator, velocity_verlet::VelocityVerlet},
     simulation_box::BoundaryTypes,
     storage::atom_type::AtomTypeBuilder,
     system::System,
@@ -25,9 +25,10 @@ fn main() {
     );
 
     // the md parameters
-    let runs = 500_000;
+    let runs = 1_000_000;
+    let warm_up_runs = 100_000;
     let dt = 0.01;
-    let temp = 100.0;
+    let temp = 1.0;
 
     // defining the potential
     let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
@@ -46,7 +47,7 @@ fn main() {
     let mut kin_energy = 0.0;
 
     // the main MD-loop
-    for _ in 0..runs {
+    for i in 0..runs {
         // stepping forward in time
         VelocityVerlet::integrate(
             &mut system.atoms,
@@ -57,33 +58,35 @@ fn main() {
             temp,
         );
 
-        // updating the potential energy
-        pot_energy += updater
-            .measure_energy(
-                &system.atoms.x,
-                &Vec::new(),
-                &system.sim_box,
-                &system.atoms.atom_types,
-            )
-            .unwrap();
+        if i > warm_up_runs {
+            // updating the potential energy
+            pot_energy += updater
+                .measure_energy(
+                    &system.atoms.x,
+                    &Vec::new(),
+                    &system.sim_box,
+                    &system.atoms.atom_types,
+                )
+                .unwrap();
 
-        // updating kinetic energy
-        kin_energy += system
-            .atoms
-            .v
-            .iter()
-            .zip(&system.atoms.atom_types)
-            .map(|(v, at)| v.dot(v) * at.mass())
-            .sum::<f32>();
+            // updating kinetic energy
+            kin_energy += system
+                .atoms
+                .v
+                .iter()
+                .zip(&system.atoms.atom_types)
+                .map(|(v, at)| v.dot(v) * at.mass())
+                .sum::<f32>();
+        }
     }
 
     // dumping the results
     println!(
         "Mean potential energy: {}",
-        pot_energy / (system.number_of_atoms() * runs) as f32
+        pot_energy / (system.number_of_atoms() * (runs - warm_up_runs)) as f32
     );
     println!(
         "Mean kinetic energy: {}",
-        kin_energy / (system.number_of_atoms() * runs) as f32 * 0.5
+        kin_energy / (system.number_of_atoms() * (runs - warm_up_runs)) as f32 * 0.5
     );
 }

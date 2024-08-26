@@ -1,9 +1,10 @@
+use num_traits::Float;
 use std::fs::File;
 use std::io::Write;
 
-use num_traits::Float;
-
 use crate::Real;
+
+// FIXME: Potential big bug!!!
 
 const N: usize = 1024;
 
@@ -79,6 +80,7 @@ impl<T: Real> PairPotential<T> {
     #[inline]
     fn mie(u0: T, r0: T, n: i32, m: i32, r: T) -> T {
         let (f_n, f_m) = (T::from(n).unwrap(), T::from(m).unwrap());
+
         u0 / (f_n - f_m) * (f_m * Float::powi(r0 / r, n) - f_n * Float::powi(r0 / r, m))
     }
 
@@ -113,6 +115,7 @@ macro_rules! create_pair_potential {
                     .for_each(|(idx, (energy, force))| {
                         // computing the current distance
                         let r_sq = if idx == 0 {
+                            // numerically stable
                             T::from(1e-4).unwrap()
                         } else {
                             dr * T::from(idx).unwrap()
