@@ -5,7 +5,6 @@ use std::io::Write;
 use nalgebra::{SMatrix, SVector};
 
 use crate::{
-    Real,
     simulation_box::{BoundaryTypes, SimulationBox, SimulationBoxBuilder},
     storage::{
         atom_store::{AtomStore, AtomStoreBuilder},
@@ -13,6 +12,7 @@ use crate::{
         atom_type_store::AtomTypeStoreBuilder,
         vector::{Forces, Positions, Velocities},
     },
+    Real,
 };
 
 pub struct System<T: Real, const D: usize> {
@@ -34,7 +34,7 @@ impl<T: Real, const D: usize> System<T, D> {
             .hmatrix(SMatrix::from_diagonal(&SVector::from_iterator(
                 crystals
                     .iter()
-                    .map(|&x| lattice_constant * T::from_usize(x).unwrap() + lattice_constant),
+                    .map(|&x| lattice_constant * T::from_usize(x + 1).unwrap()),
             )))
             .boundary_type(boundary_type)
             .build()

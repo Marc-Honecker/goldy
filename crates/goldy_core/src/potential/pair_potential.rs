@@ -23,30 +23,6 @@ impl<T: Real> PairPotential<T> {
         Self::new_mie(12, 6, u0, r0, cutoff)
     }
 
-    /// Approximates the potential energy at a given squared distance `r_sq`.
-    #[inline]
-    pub fn energy(&self, r_sq: T) -> T {
-        if r_sq > self.sq_cutoff {
-            T::zero()
-        } else {
-            let (idx, weight) = self.get_idx(r_sq);
-
-            weight * self.energies[idx] + (T::one() - weight) * self.energies[idx + 1]
-        }
-    }
-
-    /// Approximates dU/dr^2 at a given squared distance `r_sq`.
-    #[inline]
-    pub fn pseudo_force(&self, r_sq: T) -> T {
-        if r_sq > self.sq_cutoff {
-            T::zero()
-        } else {
-            let (idx, weight) = self.get_idx(r_sq);
-
-            weight * self.pseudo_forces[idx] + (T::one() - weight) * self.pseudo_forces[idx + 1]
-        }
-    }
-
     /// Dumps the `PairPotential` into the file.
     pub fn write_to_file(&self, filename: &str) {
         let mut file = File::create(filename).unwrap();
@@ -70,11 +46,13 @@ impl<T: Real> PairPotential<T> {
         file.write_all(contents.as_bytes()).unwrap();
     }
 
+    // FIXME: Big Bug!
     fn get_idx(&self, r_sq: T) -> (usize, T) {
+        // Computing the biggest index, s.t. self.field[idx] <= r_sq.
         let idx = Float::trunc(r_sq / self.dr).to_usize().unwrap();
-        let weight = T::one() - (r_sq - (T::from_usize(idx).unwrap() * self.dr)) / self.dr;
+        let diff = r_sq - T::from_usize(idx).unwrap() * self.dr;
 
-        (idx, weight)
+        (idx, diff)
     }
 
     #[inline]
@@ -91,6 +69,29 @@ impl<T: Real> PairPotential<T> {
             * (m * Float::exp(n * (T::one() - r / r0)) - n * Float::exp(m * (T::one() - r / r0)))
     }
 }
+
+macro_rules! impl_eval {
+    ($func_name: ident, $field_name: ident) => {
+        impl<T: Real> PairPotential<T> {
+            #[inline]
+            pub fn $func_name(&self, r_sq: T) -> T {
+                if r_sq >= self.sq_cutoff {
+                    T::zero()
+                } else {
+                    let (idx, diff) = self.get_idx(r_sq);
+
+                    let incr = (self.$field_name[idx + 1] - self.$field_name[idx])
+                        / (T::from(idx + 1).unwrap() * self.dr - T::from(idx).unwrap() * self.dr);
+
+                    self.$field_name[idx] + diff * incr
+                }
+            }
+        }
+    };
+}
+
+impl_eval!(pseudo_force, pseudo_forces);
+impl_eval!(energy, energies);
 
 macro_rules! create_pair_potential {
     ($func_name: ident, $name: ident) => {
@@ -175,16 +176,16 @@ mod tests {
         };
 
         // easy testcase
-        // here idx has to be 10 and the weight 1.
+        // here idx has to be 10 and the weight 0.
         let (idx, weight) = potential.get_idx(10.0);
         assert_eq!(idx, 10);
-        assert_approx_eq!(weight, 1f64);
+        assert_approx_eq!(weight, 0f64);
 
         // a bit more advanced
-        // here idx has to be 132 and the weight 0.7.
+        // here idx has to be 132 and the weight 0.3.
         let (idx, weight) = potential.get_idx(132.3);
         assert_eq!(idx, 132);
-        assert_approx_eq!(weight, 0.7);
+        assert_approx_eq!(weight, 0.3);
     }
 
     #[test]
@@ -216,11 +217,11 @@ mod tests {
         assert_approx_eq!(e, 8.0);
         assert_approx_eq!(f, 8.0);
 
-        // testing the energy and pseudo force at r_sq = 4.5
-        let e = pair_potential.energy(4.5);
-        let f = pair_potential.pseudo_force(4.5);
-        assert_approx_eq!(e, 4.5);
-        assert_approx_eq!(f, 4.5);
+        // testing the energy and pseudo force at r_sq = 4.3
+        let e = pair_potential.energy(4.3);
+        let f = pair_potential.pseudo_force(4.3);
+        assert_approx_eq!(e, 4.3);
+        assert_approx_eq!(f, 4.3);
 
         // testing the energy and pseudo force at r_sq > sq_cutoff
         let e = pair_potential.energy(12.0);

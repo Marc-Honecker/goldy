@@ -73,8 +73,15 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
                             .expect("Please provide a proper amount of `AtomType`s.")
                             .pseudo_force(sim_box.sq_distance(curr_pos, neighbor_pos));
 
+                        // println!(
+                        //     "\nDistance: {}",
+                        //     nalgebra::ComplexField::sqrt(
+                        //         sim_box.sq_distance(curr_pos, neighbor_pos)
+                        //     )
+                        // );
+                        // println!("Force: {pseudo_force}\n");
+
                         // updating the force
-                        // FIXME
                         acc + sim_box.difference(curr_pos, neighbor_pos) * pseudo_force
                     });
             });

@@ -6,6 +6,8 @@ use nalgebra::{SMatrix, SVector};
 
 use crate::{storage::vector::Positions, Real};
 
+// FIXME: Vector subtraction
+
 #[derive(Debug, Builder, PartialEq, Eq)]
 pub struct SimulationBox<T: Real, const D: usize> {
     hmatrix: SMatrix<T, D, D>,
@@ -26,24 +28,7 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     /// Returns the squared distance between two `SVector`s. This
     /// method obeys the defined boundary conditions.
     pub fn sq_distance(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> T {
-        match self.boundary_type {
-            // Periodic boundaries are currently the only special cases.
-            BoundaryTypes::Periodic => {
-                /*                // making two local copies
-                let mut x1 = *x1;
-                let mut x2 = *x2;
-
-                // setting them back
-                self.set_back_to_cell(&mut x1);
-                self.set_back_to_cell(&mut x2);
-
-                // and computing the squared norm
-                (x1 - x2).norm_squared()*/
-                self.difference(x1, x2).norm_squared()
-            }
-            // Here, everything is normal.
-            BoundaryTypes::Open => (x1 - x2).norm_squared(),
-        }
+        self.difference(x1, x2).norm_squared()
     }
 
     /// Returns the distance between two `SVector`s. This
@@ -81,13 +66,34 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
 
     /// Computes the difference of the two given `SVector`s w.r.t. to the boundary conditions.
     pub fn difference(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> SVector<T, D> {
-        let mut d = self.to_relative(x1 - x2);
+        match self.boundary_type {
+            BoundaryTypes::Periodic => {
+                // println!("x1 real: {x1}");
+                // println!("x2 real: {x2}");
+                let x1 = self.to_relative(*x1);
+                let x2 = self.to_relative(*x2);
+                // println!("x1 relative: {x1}");
+                // println!("x2 relative: {x2}");
 
-        d.iter_mut().for_each(|x| {
-            *x -= na::ComplexField::round(*x);
-        });
+                let mut d = x1 - x2;
 
-        self.to_real(d)
+                // println!("d before: {d}");
+
+                d.iter_mut().for_each(|x| {
+                    *x -= num_traits::Float::round(*x);
+                });
+
+                // println!("d after: {d}");
+
+                d = self.to_real(d);
+
+                // println!("real d: {d}");
+                // println!("Norm: {}", d.norm());
+                d
+            }
+
+            BoundaryTypes::Open => x1 - x2,
+        }
     }
 
     /// Returns a relative `SVector`.
