@@ -4,8 +4,6 @@ use std::io::Write;
 
 use crate::Real;
 
-// FIXME: Potential big bug!!!
-
 const N: usize = 1024;
 
 #[derive(Debug, Copy, Clone)]
@@ -46,7 +44,6 @@ impl<T: Real> PairPotential<T> {
         file.write_all(contents.as_bytes()).unwrap();
     }
 
-    // FIXME: Big Bug!
     fn get_idx(&self, r_sq: T) -> (usize, T) {
         // Computing the biggest index, s.t. self.field[idx] <= r_sq.
         let idx = Float::trunc(r_sq / self.dr).to_usize().unwrap();
@@ -108,6 +105,8 @@ macro_rules! create_pair_potential {
                 let dr = cutoff * cutoff / T::from(N).unwrap();
                 // computing the energy at the cutoff distance
                 let energy_at_cutoff = Self::$func_name(u0, r0, n as i32, m as i32, cutoff);
+                // choosing the precision
+                let precision = T::from(1e-4).unwrap();
 
                 energies
                     .iter_mut()
@@ -117,7 +116,7 @@ macro_rules! create_pair_potential {
                         // computing the current distance
                         let r_sq = if idx == 0 {
                             // numerically stable
-                            T::from(1e-4).unwrap()
+                            precision
                         } else {
                             dr * T::from(idx).unwrap()
                         };
@@ -132,17 +131,17 @@ macro_rules! create_pair_potential {
                             r0,
                             n as i32,
                             m as i32,
-                            Float::sqrt(r_sq * (T::one() - T::from(1e-5).unwrap())),
+                            Float::sqrt(r_sq * (T::one() - precision)),
                         );
                         let right = Self::$func_name(
                             u0,
                             r0,
                             n as i32,
                             m as i32,
-                            Float::sqrt(r_sq * (T::one() + T::from(1e-5).unwrap())),
+                            Float::sqrt(r_sq * (T::one() + precision)),
                         );
 
-                        *force = (right - left) / (T::from(1e-5).unwrap() * r_sq);
+                        *force = (right - left) / (precision * r_sq);
                     });
 
                 Self {
