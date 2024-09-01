@@ -6,8 +6,6 @@ use nalgebra::{SMatrix, SVector};
 
 use crate::{storage::vector::Positions, Real};
 
-// FIXME: Vector subtraction
-
 #[derive(Debug, Builder, PartialEq, Eq)]
 pub struct SimulationBox<T: Real, const D: usize> {
     hmatrix: SMatrix<T, D, D>,
@@ -68,27 +66,16 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     pub fn difference(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> SVector<T, D> {
         match self.boundary_type {
             BoundaryTypes::Periodic => {
-                // println!("x1 real: {x1}");
-                // println!("x2 real: {x2}");
                 let x1 = self.to_relative(*x1);
                 let x2 = self.to_relative(*x2);
-                // println!("x1 relative: {x1}");
-                // println!("x2 relative: {x2}");
 
                 let mut d = x1 - x2;
-
-                // println!("d before: {d}");
 
                 d.iter_mut().for_each(|x| {
                     *x -= num_traits::Float::round(*x);
                 });
 
-                // println!("d after: {d}");
-
                 d = self.to_real(d);
-
-                // println!("real d: {d}");
-                // println!("Norm: {}", d.norm());
                 d
             }
 
@@ -98,13 +85,13 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
 
     /// Returns a relative `SVector`.
     #[inline]
-    fn to_relative(&self, x: SVector<T, D>) -> SVector<T, D> {
+    pub fn to_relative(&self, x: SVector<T, D>) -> SVector<T, D> {
         self.inv_hmatrix * x
     }
 
     /// Returns a real `SVector`.
     #[inline]
-    fn to_real(&self, x: SVector<T, D>) -> SVector<T, D> {
+    pub fn to_real(&self, x: SVector<T, D>) -> SVector<T, D> {
         self.hmatrix * x
     }
 
@@ -257,6 +244,10 @@ mod tests {
         let x1 = SVector::<f64, 2>::from_iterator([1.0, 1.0]);
         let x2 = SVector::<f64, 2>::from_iterator([9.0, 9.0]);
         let x3 = SVector::<f64, 2>::from_iterator([-1.0, -1.0]);
+        let x4 = SVector::<f64, 2>::from_iterator([8.0, 1.0]);
+        let x5 = SVector::<f64, 2>::from_iterator([8.0, 7.0]);
+        let x6 = SVector::<f64, 2>::from_iterator([9.0, 0.0]);
+        let x7 = SVector::<f64, 2>::from_iterator([7.0, 7.0]);
 
         assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 8.0);
         assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 8.0);
@@ -270,6 +261,14 @@ mod tests {
         );
         assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 8.0.sqrt());
         assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 8.0.sqrt());
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x4, &x5), 16.0);
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x5, &x4), 16.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x4, &x5), 4.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x5, &x4), 4.0);
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x6, &x7), 13.0);
+        assert_approx_eq!(periodic_sim_box.sq_distance(&x7, &x6), 13.0);
+        assert_approx_eq!(periodic_sim_box.distance(&x6, &x7), 13.0.sqrt());
+        assert_approx_eq!(periodic_sim_box.distance(&x7, &x6), 13.0.sqrt());
 
         // The implementation should also work for positions which are far outside.
         let x1 = SVector::<f64, 2>::from_iterator([-39.0, -30.0]);

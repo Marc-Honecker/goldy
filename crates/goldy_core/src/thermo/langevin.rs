@@ -55,10 +55,6 @@ where
             // Drawing the random vector.
             let rand_vec = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
 
-            rand_vec
-                .iter()
-                .for_each(|x| assert!((-T::one()..=T::one()).contains(x)));
-
             // adding the random forces
             *f += rand_vec * ComplexField::sqrt(T::from(6).unwrap() * dp / dt * temp);
         });

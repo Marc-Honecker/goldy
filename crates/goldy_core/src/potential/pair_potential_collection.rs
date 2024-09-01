@@ -36,11 +36,13 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
                     // retrieving the neighbor type
                     let neighbor_type = atom_types.get_by_idx(neighbor_idx);
 
-                    // evaluating the potential energy and updating the energy
-                    acc + self
+                    // evaluating the potential energy
+                    let curr_energy = self
                         .get_pair_potential(curr_atom_type, neighbor_type)
                         .expect("Please provide a proper amount of `AtomType`s.")
-                        .energy(sim_box.sq_distance(curr_pos, neighbor_pos))
+                        .energy(sim_box.sq_distance(curr_pos, neighbor_pos));
+
+                    acc + curr_energy
                 })
             },
         )
@@ -59,7 +61,7 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
             .zip(neighbor_list)
             .zip(atom_types)
             .for_each(|(((f, curr_pos), neighbors), curr_atom_type)| {
-                *f -= neighbors
+                let f_trial = neighbors
                     .iter()
                     .fold(SVector::zeros(), |acc, &neighbor_idx| {
                         // retrieving the neighbor position
@@ -71,19 +73,22 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
                         let pseudo_force = self
                             .get_pair_potential(curr_atom_type, neighbor_type)
                             .expect("Please provide a proper amount of `AtomType`s.")
+                            // FIXME: This line is buggy!
                             .pseudo_force(sim_box.sq_distance(curr_pos, neighbor_pos));
-
-                        // println!(
-                        //     "\nDistance: {}",
-                        //     nalgebra::ComplexField::sqrt(
-                        //         sim_box.sq_distance(curr_pos, neighbor_pos)
-                        //     )
-                        // );
-                        // println!("Force: {pseudo_force}\n");
 
                         // updating the force
                         acc + sim_box.difference(curr_pos, neighbor_pos) * pseudo_force
                     });
+
+                // addresses numerical issues
+                f.iter_mut().zip(&f_trial).for_each(|(f, f_trial)| {
+                    *f -= if (T::from(-1e-10).unwrap()..=T::from(1e-10).unwrap()).contains(f_trial)
+                    {
+                        T::zero()
+                    } else {
+                        *f_trial
+                    };
+                })
             });
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
-    force_update::ForceUpdate, propagator::Propagator, Real,
-    simulation_box::SimulationBox, storage::atom_store::AtomStore,
+    force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore, Real,
 };
 
 pub struct VelocityVerlet;

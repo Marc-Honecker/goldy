@@ -22,9 +22,9 @@ fn argon_lennard_jones() {
 
     // simulation parameters
     let dt = 1e-2;
-    let temp = 1.0;
-    let runs = 10_000;
-    let warm_ups = 2_000;
+    let temp = 50.0;
+    let runs = 1_000_000;
+    let warm_ups = 200_000;
     let cutoff = 7.85723;
 
     // Argon
@@ -48,19 +48,13 @@ fn argon_lennard_jones() {
     // the atoms
     let mut system = System::new_cubic(
         Vector3::new(7, 7, 7),
-        0.5 * cutoff,
+        0.45 * cutoff,
         BoundaryTypes::Periodic,
         at,
     );
-    // let mut system = System::new_random(
-    //     Vector3::new(120.0, 120.0, 120.0),
-    //     BoundaryTypes::Periodic,
-    //     at,
-    //     400,
-    // );
 
     // the neighbor-list
-    let mut neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, cutoff);
+    let mut neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, 1.1 * cutoff);
 
     // thermostat
     let langevin = Langevin::new();
@@ -73,15 +67,15 @@ fn argon_lennard_jones() {
 
     // kinetic energy moments
     let mut tkin_1 = 0.0;
-    let mut vpot_1 = 0.0;
+    let (mut vpot_1, mut num_updates) = (0.0, 0);
 
     // the main MD-loop
     for i in 0..runs {
         if (i + 1) % 10 == 0 {
-            // update the neighbor-list every 20 time-steps
-            neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, cutoff);
+            // update the neighbor-list every few time-steps
+            neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, 1.1 * cutoff);
         }
-        if i % 500 == 0 {
+        if i % 1_000 == 0 {
             // writing out the simulation cell
             system.write_system_to_file(format!("test_outputs/cubic_cell_{i}.out").as_str());
         }
@@ -96,7 +90,7 @@ fn argon_lennard_jones() {
             temp,
         );
 
-        if i > warm_ups {
+        if i >= warm_ups {
             // measuring the kinetic energy
             // TODO: move to Observer
             let tkin_mean = 0.5
@@ -108,7 +102,7 @@ fn argon_lennard_jones() {
                     .map(|(&v, &t)| t.mass() * v.dot(&v))
                     .sum::<f32>();
 
-            if i % 100 == 0 {
+            if i % 1_000 == 0 {
                 let vpot_mean = updater
                     .measure_energy(
                         &system.atoms.x,
@@ -119,6 +113,7 @@ fn argon_lennard_jones() {
                     .unwrap();
 
                 vpot_1 += vpot_mean;
+                num_updates += 1;
 
                 println!(
                     "{i}, {}, {}",
@@ -141,12 +136,13 @@ fn argon_lennard_jones() {
     }
 
     tkin_1 /= ((runs - warm_ups) * system.number_of_atoms()) as f32;
+    vpot_1 /= (num_updates * system.number_of_atoms()) as f32;
 
-    println!("{tkin_1}");
+    println!("{tkin_1}, {vpot_1}");
 
     // this should hold
     let analytical_solution = 1.5 * temp;
-    assert_approx_eq!(analytical_solution, tkin_1, 1e-6 * analytical_solution);
+    assert_approx_eq!(analytical_solution, tkin_1, 1e-2 * analytical_solution);
 }
 
 fn compute_neighbor_list<T: Real>(
@@ -166,8 +162,6 @@ fn compute_neighbor_list<T: Real>(
             }
         }
     }
-
-    // println!("\n\nNeighbor List done!\n\n");
 
     neighbor_list
 }

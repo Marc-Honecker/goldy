@@ -69,6 +69,10 @@ impl<T: Real, const D: usize> System<T, D> {
         Self { sim_box, atoms }
     }
 
+    pub fn new_custom(atoms: AtomStore<T, D>, sim_box: SimulationBox<T, D>) -> Self {
+        Self { sim_box, atoms }
+    }
+
     /// Tests, if all atoms still lie in the `SimulationBox`.
     pub fn validate(&self) -> bool {
         self.atoms.x.iter().all(|x| self.sim_box.contains(x))
