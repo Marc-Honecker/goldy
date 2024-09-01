@@ -37,6 +37,9 @@ fn argon_lennard_jones() {
 
     let lj = PairPotential::new_lennard_jones(120.0, 3.92862, cutoff);
 
+    // creating the directory, if it does not exist
+    std::fs::create_dir_all("test_outputs").unwrap_or(());
+
     lj.write_to_file("test_outputs/lj.out");
 
     // Lennard-Jones pair-potential
