@@ -10,6 +10,7 @@ pub struct Observer<T: Real> {
 }
 
 impl<T: Real> Observer<T> {
+    /// Observes the kinetic energy.
     pub fn observe_kinetic_energy<const D: usize>(&mut self, atoms: &AtomStore<T, D>) {
         self.kinetic_energies.push(
             T::from(0.5).unwrap()
@@ -22,6 +23,7 @@ impl<T: Real> Observer<T> {
         );
     }
 
+    /// Returns the average of all kinetic energy observations.
     pub fn get_mean_kinetic_energy(&self) -> T {
         self.kinetic_energies
             .iter()
@@ -29,6 +31,7 @@ impl<T: Real> Observer<T> {
             / T::from_usize(self.kinetic_energies.len()).unwrap()
     }
 
+    /// Observes the potential energy.
     pub fn observe_potential_energy<const D: usize>(
         &mut self,
         system: &System<T, D>,
@@ -46,6 +49,7 @@ impl<T: Real> Observer<T> {
         }
     }
 
+    /// Returns the average of all potential energy observations.
     pub fn get_mean_potential_energy(&self) -> Option<T> {
         if self.potential_energies.is_empty() {
             None
@@ -57,5 +61,15 @@ impl<T: Real> Observer<T> {
                     / T::from_usize(self.potential_energies.len())?,
             )
         }
+    }
+
+    /// Returns a reference to all kinetic energy observations.
+    pub fn get_kinetic_energy_observations(&self) -> &Vec<T> {
+        &self.kinetic_energies
+    }
+
+    /// Returns a reference to all potential energy observations.
+    pub fn get_potential_energy_observations(&self) -> &Vec<T> {
+        &self.potential_energies
     }
 }
