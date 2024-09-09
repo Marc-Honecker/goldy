@@ -1,9 +1,9 @@
-use crate::{
-    potential::Potential, Real, simulation_box::SimulationBox,
-    storage::atom_store::AtomStore, thermo::ForceDrivenThermostat,
-};
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::Positions;
+use crate::{
+    potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
+    thermo::ForceDrivenThermostat, Real,
+};
 
 #[derive(Default)]
 pub struct ForceUpdate<T: Real, const D: usize> {
@@ -18,6 +18,10 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
             thermostat: None,
             potential: None,
         }
+    }
+
+    pub fn get_potential(&self) -> &Option<Box<dyn Potential<T, D>>> {
+        &self.potential
     }
 
     /// Updates the forces according to the defined `ForceDrivenThermostat` and `Potential`.

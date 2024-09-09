@@ -1,8 +1,6 @@
+use goldy_core::compute_neighbor_list;
 use goldy_core::propagator::velocity_verlet::VelocityVerlet;
-use goldy_core::simulation_box::SimulationBox;
-use goldy_core::storage::vector::Positions;
 use goldy_core::thermo::langevin::Langevin;
-use goldy_core::Real;
 use nalgebra::Vector3;
 
 #[test]
@@ -22,7 +20,7 @@ fn argon_lennard_jones() {
 
     // simulation parameters
     let dt = 1e-2;
-    let temp = 50.0;
+    let temp = 1.0;
     let runs = 1_000_000;
     let warm_ups = 200_000;
     let cutoff = 7.85723;
@@ -50,11 +48,17 @@ fn argon_lennard_jones() {
 
     // the atoms
     let mut system = System::new_cubic(
-        Vector3::new(7, 7, 7),
+        Vector3::new(4, 4, 4),
         0.45 * cutoff,
         BoundaryTypes::Periodic,
         at,
     );
+    // let mut system = System::new_random(
+    //     Vector3::new(4.5 * cutoff, 4.5 * cutoff, 4.5 * cutoff),
+    //     BoundaryTypes::Periodic,
+    //     at,
+    //     864,
+    // );
 
     // the neighbor-list
     let mut neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, 1.1 * cutoff);
@@ -72,13 +76,21 @@ fn argon_lennard_jones() {
     let mut tkin_1 = 0.0;
     let (mut vpot_1, mut num_updates) = (0.0, 0);
 
+    // determines, when we need an update in the neighbor list
+    let mut need_update = 2;
+
     // the main MD-loop
     for i in 0..runs {
-        if (i + 1) % 10 == 0 {
-            // update the neighbor-list every few time-steps
+        if (i + 1) % 4_000 == 0 && need_update < 600 {
+            need_update *= 2;
+        }
+
+        if (i + 1) % need_update == 0 {
+            // update neighbor list every few time steps
             neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, 1.1 * cutoff);
         }
-        if i % 1_000 == 0 {
+
+        if i % 10_000 == 0 {
             // writing out the simulation cell
             system.write_system_to_file(format!("test_outputs/cubic_cell_{i}.out").as_str());
         }
@@ -103,7 +115,7 @@ fn argon_lennard_jones() {
                     .iter()
                     .zip(&system.atoms.atom_types)
                     .map(|(&v, &t)| t.mass() * v.dot(&v))
-                    .sum::<f32>();
+                    .sum::<f64>();
 
             if i % 1_000 == 0 {
                 let vpot_mean = updater
@@ -120,8 +132,8 @@ fn argon_lennard_jones() {
 
                 println!(
                     "{i}, {}, {}",
-                    tkin_mean / system.number_of_atoms() as f32,
-                    vpot_mean / system.number_of_atoms() as f32
+                    tkin_mean / system.number_of_atoms() as f64,
+                    vpot_mean / system.number_of_atoms() as f64
                 );
             }
 
@@ -138,33 +150,12 @@ fn argon_lennard_jones() {
         assert!(system.validate())
     }
 
-    tkin_1 /= ((runs - warm_ups) * system.number_of_atoms()) as f32;
-    vpot_1 /= (num_updates * system.number_of_atoms()) as f32;
+    tkin_1 /= ((runs - warm_ups) * system.number_of_atoms()) as f64;
+    vpot_1 /= (num_updates * system.number_of_atoms()) as f64;
 
     println!("{tkin_1}, {vpot_1}");
 
     // this should hold
     let analytical_solution = 1.5 * temp;
     assert_approx_eq!(analytical_solution, tkin_1, 1e-2 * analytical_solution);
-}
-
-fn compute_neighbor_list<T: Real>(
-    x: &Positions<T, 3>,
-    simulation_box: &SimulationBox<T, 3>,
-    max_cutoff: T,
-) -> Vec<Vec<usize>> {
-    let mut neighbor_list = vec![Vec::new(); x.len()];
-    let sq_max_cutoff = max_cutoff * max_cutoff;
-
-    for (nl, x1) in neighbor_list.iter_mut().zip(x) {
-        for (idx, x2) in x.iter().enumerate() {
-            let sq_dist = simulation_box.sq_distance(x1, x2);
-
-            if sq_dist <= sq_max_cutoff && sq_dist > T::zero() {
-                nl.push(idx);
-            }
-        }
-    }
-
-    neighbor_list
 }
