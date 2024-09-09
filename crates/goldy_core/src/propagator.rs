@@ -1,9 +1,9 @@
 use crate::{
-    force_update::ForceUpdate, Real, simulation_box::SimulationBox, storage::atom_store::AtomStore,
+    force_update::ForceUpdate, simulation_box::SimulationBox, storage::atom_store::AtomStore, Real,
 };
 
 pub mod euler;
-pub mod velocity_verlet;
+pub mod leap_frog_verlet;
 
 pub trait Propagator {
     /// Propagates a system in time and returns the accumulated potential-energy,

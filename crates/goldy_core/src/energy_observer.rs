@@ -3,13 +3,13 @@ use crate::storage::atom_store::AtomStore;
 use crate::system::System;
 use crate::Real;
 
-/// This struct handles all observations.
-pub struct Observer<T: Real> {
+/// This struct handles all energy observations.
+pub struct EnergyObserver<T: Real> {
     kinetic_energies: Vec<T>,
     potential_energies: Vec<T>,
 }
 
-impl<T: Real> Observer<T> {
+impl<T: Real> EnergyObserver<T> {
     /// Observes the kinetic energy.
     pub fn observe_kinetic_energy<const D: usize>(&mut self, atoms: &AtomStore<T, D>) {
         self.kinetic_energies.push(

@@ -5,7 +5,7 @@ fn ideal_gas() {
 
     use goldy_core::{
         force_update::ForceUpdateBuilder,
-        propagator::{Propagator, velocity_verlet::VelocityVerlet},
+        propagator::{leap_frog_verlet::LeapFrogVerlet, Propagator},
         simulation_box::BoundaryTypes,
         storage::atom_type::AtomTypeBuilder,
         system::System,
@@ -43,7 +43,7 @@ fn ideal_gas() {
     // the main MD-loop
     for i in 0..runs {
         // propagating the system in time
-        VelocityVerlet::integrate(
+        LeapFrogVerlet::integrate(
             &mut system.atoms,
             &Vec::new(),
             &system.sim_box,

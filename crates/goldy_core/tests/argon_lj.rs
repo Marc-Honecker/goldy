@@ -1,5 +1,5 @@
 use goldy_core::compute_neighbor_list;
-use goldy_core::propagator::velocity_verlet::VelocityVerlet;
+use goldy_core::propagator::leap_frog_verlet::LeapFrogVerlet;
 use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
 
@@ -96,7 +96,7 @@ fn argon_lennard_jones() {
         }
 
         // propagating the system in time
-        VelocityVerlet::integrate(
+        LeapFrogVerlet::integrate(
             &mut system.atoms,
             &neighbor_list,
             &system.sim_box,
