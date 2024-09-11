@@ -94,7 +94,7 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
 }
 
 impl<T: Real> PairPotentialCollection<T> {
-    fn get_pair_potential(
+    pub(crate) fn get_pair_potential(
         &self,
         at1: &AtomType<T>,
         at2: &AtomType<T>,
