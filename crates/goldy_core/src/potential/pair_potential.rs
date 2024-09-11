@@ -21,6 +21,16 @@ impl<T: Real> PairPotential<T> {
         Self::new_mie(12, 6, u0, r0, cutoff)
     }
 
+    /// Returns the cutoff of this `PairPotential`
+    pub fn get_cutoff(&self) -> T {
+        Float::sqrt(self.sq_cutoff)
+    }
+
+    /// Returns the squared cutoff of this `PairPotential`
+    pub fn get_squared_cutoff(&self) -> T {
+        self.sq_cutoff
+    }
+
     /// Dumps the `PairPotential` into the file.
     pub fn write_to_file(&self, filename: &str) {
         let mut file = File::create(filename).unwrap();
