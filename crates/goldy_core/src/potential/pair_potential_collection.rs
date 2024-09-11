@@ -11,7 +11,7 @@ use crate::{potential::pair_potential::PairPotential, storage::atom_type::AtomTy
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct PairPotentialCollection<T: Real> {
     #[builder(setter(custom))]
-    atom_type_ids: Vec<(u32, u32)>,
+    atom_type_ids: Vec<(usize, usize)>,
     #[builder(setter(custom))]
     pair_potentials: Vec<PairPotential<T>>,
 }

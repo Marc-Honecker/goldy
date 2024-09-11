@@ -1,6 +1,6 @@
 use crate::{
-    Real,
     storage::{atom_type::AtomType, iterator::Iter},
+    Real,
 };
 
 #[derive(Debug, Default, Clone)]
@@ -23,11 +23,23 @@ impl<T: Real> AtomTypeStore<T> {
         seen_ids.len()
     }
 
+    pub fn get_ids(&self) -> Vec<usize> {
+        let mut seen_ids = Vec::new();
+
+        self.data.iter().for_each(|at| {
+            if !seen_ids.contains(&at.id()) {
+                seen_ids.push(at.id());
+            }
+        });
+
+        seen_ids
+    }
+
     /// Returns all Pairs of `AtomType`.id() and the masses.
     /// For efficiency, if you need the number of types and the
     /// pairs of ids, masses, consider using this method, since
     /// self.number_types() == self.get_masses().len()
-    pub fn get_masses(&self) -> Vec<(u32, T)> {
+    pub fn get_masses(&self) -> Vec<(usize, T)> {
         let mut seen_pairs = Vec::new();
 
         self.data.iter().for_each(|at| {

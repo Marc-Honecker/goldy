@@ -7,7 +7,7 @@ use crate::Real;
 /// Determines the type of the atom and stores per atom data like
 /// the mass and the damping.
 pub struct AtomType<T: Real> {
-    id: u32,
+    id: usize,
     mass: T,
     damping: T,
 }
@@ -25,7 +25,7 @@ impl<T: Real> AtomType<T> {
     }
 
     /// Returns the ID of this atom-type.
-    pub fn id(&self) -> u32 {
+    pub fn id(&self) -> usize {
         self.id
     }
 }
