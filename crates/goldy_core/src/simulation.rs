@@ -5,6 +5,7 @@ use crate::{
     storage::atom_store::AtomStore, Real,
 };
 
+#[allow(unused)]
 pub struct Simulation<T: Real, const D: usize, P: Propagator> {
     atoms: AtomStore<T, D>,
     simulation_box: SimulationBox<T, D>,
