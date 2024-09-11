@@ -110,6 +110,22 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     }
 }
 
+macro_rules! generate_compute_volume {
+    ($num: expr) => {
+        impl<T: Real> SimulationBox<T, $num> {
+            #[inline]
+            pub fn compute_volume(&self) -> T {
+                self.hmatrix.determinant()
+            }
+        }
+    };
+}
+
+// workaround for Const<D>: Typenum
+generate_compute_volume!(1);
+generate_compute_volume!(2);
+generate_compute_volume!(3);
+
 impl<T: Real + Display> SimulationBox<T, 3> {
     /// Returns a string representation of the `SimulationBox` boundaries.
     pub(crate) fn convert_to_string(&self) -> String {
