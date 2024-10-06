@@ -10,6 +10,7 @@ pub mod error;
 pub mod force_update;
 pub mod potential;
 pub mod propagator;
+pub mod rdf;
 pub mod simulation;
 pub mod simulation_box;
 pub mod storage;

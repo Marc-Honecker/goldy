@@ -109,6 +109,17 @@ impl<T: Real> PairPotentialCollection<T> {
 
         None
     }
+
+    pub(crate) fn get_id_pairs(&self) -> Vec<(usize, usize)> {
+        self.atom_type_ids.clone()
+    }
+
+    pub(crate) fn get_cutoffs(&self) -> Vec<T> {
+        self.pair_potentials
+            .iter()
+            .map(|pp| pp.get_cutoff())
+            .collect()
+    }
 }
 
 impl<T: Real> PairPotentialCollectionBuilder<T> {

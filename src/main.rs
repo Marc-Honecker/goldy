@@ -3,7 +3,7 @@ use nalgebra::Vector3;
 use goldy_core::{
     force_update::ForceUpdateBuilder,
     potential::harmonic_oscillator::HarmonicOscillatorBuilder,
-    propagator::{leap_frog_verlet::LeapFrogVerlet, Propagator},
+    propagator::{velocity_verlet::VelocityVerlet, Propagator},
     simulation_box::BoundaryTypes,
     storage::atom_type::AtomTypeBuilder,
     system::System,
@@ -49,7 +49,7 @@ fn main() {
     // the main MD-loop
     for i in 0..runs {
         // stepping forward in time
-        LeapFrogVerlet::integrate(
+        VelocityVerlet::integrate(
             &mut system.atoms,
             &Vec::new(),
             &system.sim_box,

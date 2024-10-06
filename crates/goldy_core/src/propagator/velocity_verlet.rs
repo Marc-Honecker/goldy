@@ -3,9 +3,9 @@ use crate::{
     storage::atom_store::AtomStore, Real,
 };
 
-pub struct LeapFrogVerlet;
+pub struct VelocityVerlet;
 
-impl Propagator for LeapFrogVerlet {
+impl Propagator for VelocityVerlet {
     fn integrate<T: Real, const D: usize>(
         atom_store: &mut AtomStore<T, D>,
         neighbor_list: &Vec<Vec<usize>>,

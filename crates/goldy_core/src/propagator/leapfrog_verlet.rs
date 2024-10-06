@@ -1,9 +1,9 @@
 use crate::{force_update::ForceUpdate, propagator::Propagator, Real};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Euler;
+pub struct LeapfrogVerlet;
 
-impl Propagator for Euler {
+impl Propagator for LeapfrogVerlet {
     fn integrate<T: Real, const D: usize>(
         atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
         neighbor_list: &Vec<Vec<usize>>,
@@ -83,7 +83,7 @@ mod tests {
             .unwrap();
 
         // propagating one step in time
-        Euler::integrate::<f32, 3>(
+        LeapfrogVerlet::integrate::<f32, 3>(
             &mut atom_store,
             &Vec::new(),
             &sim_box,

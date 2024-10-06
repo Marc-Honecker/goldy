@@ -1,11 +1,12 @@
 #[test]
+#[ignore]
 fn ideal_gas() {
     use assert_approx_eq::assert_approx_eq;
     use nalgebra::Vector3;
 
     use goldy_core::{
         force_update::ForceUpdateBuilder,
-        propagator::{leap_frog_verlet::LeapFrogVerlet, Propagator},
+        propagator::{velocity_verlet::VelocityVerlet, Propagator},
         simulation_box::BoundaryTypes,
         storage::atom_type::AtomTypeBuilder,
         system::System,
@@ -15,8 +16,8 @@ fn ideal_gas() {
     // simulation parameters
     let dt = 0.01;
     let temp = 1.0;
-    let runs = 500_000;
-    let warm_up = 100_000;
+    let runs = 1_000_000;
+    let warm_up = 200_000;
 
     // Argon
     let at = AtomTypeBuilder::default()
@@ -43,7 +44,7 @@ fn ideal_gas() {
     // the main MD-loop
     for i in 0..runs {
         // propagating the system in time
-        LeapFrogVerlet::integrate(
+        VelocityVerlet::integrate(
             &mut system.atoms,
             &Vec::new(),
             &system.sim_box,

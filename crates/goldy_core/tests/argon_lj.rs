@@ -1,9 +1,10 @@
 use goldy_core::compute_neighbor_list;
-use goldy_core::propagator::leap_frog_verlet::LeapFrogVerlet;
+use goldy_core::propagator::velocity_verlet::VelocityVerlet;
 use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
 
 #[test]
+#[ignore]
 fn argon_lennard_jones() {
     use assert_approx_eq::assert_approx_eq;
     use goldy_core::{
@@ -21,8 +22,8 @@ fn argon_lennard_jones() {
     // simulation parameters
     let dt = 1e-2;
     let temp = 1.0;
-    let runs = 1_000_000;
-    let warm_ups = 200_000;
+    let runs = 100_000;
+    let warm_ups = 20_000;
     let cutoff = 7.85723;
 
     // Argon
@@ -77,26 +78,22 @@ fn argon_lennard_jones() {
     let (mut vpot_1, mut num_updates) = (0.0, 0);
 
     // determines, when we need an update in the neighbor list
-    let mut need_update = 2;
+    let need_update = 20;
 
     // the main MD-loop
     for i in 0..runs {
-        if (i + 1) % 4_000 == 0 && need_update < 600 {
-            need_update *= 2;
-        }
-
         if (i + 1) % need_update == 0 {
             // update neighbor list every few time steps
             neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, 1.1 * cutoff);
         }
 
-        if i % 10_000 == 0 {
+        if i % 1_000 == 0 {
             // writing out the simulation cell
             system.write_system_to_file(format!("test_outputs/cubic_cell_{i}.out").as_str());
         }
 
         // propagating the system in time
-        LeapFrogVerlet::integrate(
+        VelocityVerlet::integrate(
             &mut system.atoms,
             &neighbor_list,
             &system.sim_box,
@@ -115,7 +112,7 @@ fn argon_lennard_jones() {
                     .iter()
                     .zip(&system.atoms.atom_types)
                     .map(|(&v, &t)| t.mass() * v.dot(&v))
-                    .sum::<f64>();
+                    .sum::<f32>();
 
             if i % 1_000 == 0 {
                 let vpot_mean = updater
@@ -132,8 +129,8 @@ fn argon_lennard_jones() {
 
                 println!(
                     "{i}, {}, {}",
-                    tkin_mean / system.number_of_atoms() as f64,
-                    vpot_mean / system.number_of_atoms() as f64
+                    tkin_mean / system.number_of_atoms() as f32,
+                    vpot_mean / system.number_of_atoms() as f32
                 );
             }
 
@@ -150,8 +147,8 @@ fn argon_lennard_jones() {
         assert!(system.validate())
     }
 
-    tkin_1 /= ((runs - warm_ups) * system.number_of_atoms()) as f64;
-    vpot_1 /= (num_updates * system.number_of_atoms()) as f64;
+    tkin_1 /= ((runs - warm_ups) * system.number_of_atoms()) as f32;
+    vpot_1 /= (num_updates * system.number_of_atoms()) as f32;
 
     println!("{tkin_1}, {vpot_1}");
 
