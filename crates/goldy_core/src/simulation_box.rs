@@ -95,6 +95,11 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
         self.hmatrix * x
     }
 
+    /// Returns the maximum values of the simulation box in each direction.
+    pub(crate) fn get_max_values(&self) -> SVector<T, D> {
+        self.hmatrix * SVector::<T, D>::from_element(T::one())
+    }
+
     /// Sets a `SVector` back into the simulation cell
     #[inline]
     fn set_back_to_cell(&self, x: &mut SVector<T, D>) {

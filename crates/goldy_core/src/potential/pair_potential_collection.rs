@@ -120,6 +120,16 @@ impl<T: Real> PairPotentialCollection<T> {
             .map(|pp| pp.get_cutoff())
             .collect()
     }
+
+    pub(crate) fn get_cutoff_by_atom_type(
+        &self,
+        at1: &AtomType<T>,
+        at2: &AtomType<T>,
+    ) -> Option<T> {
+        let pp = self.get_pair_potential(at1, at2);
+
+        pp.map(|pp| pp.get_cutoff())
+    }
 }
 
 impl<T: Real> PairPotentialCollectionBuilder<T> {

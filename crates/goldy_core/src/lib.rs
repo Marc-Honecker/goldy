@@ -8,6 +8,7 @@ use error::GoldyError;
 pub mod energy_observer;
 pub mod error;
 pub mod force_update;
+pub mod neighbor_list;
 pub mod potential;
 pub mod propagator;
 pub mod rdf;
