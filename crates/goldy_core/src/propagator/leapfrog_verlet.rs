@@ -1,3 +1,4 @@
+use crate::neighbor_list::NeighborList;
 use crate::{force_update::ForceUpdate, propagator::Propagator, Real};
 
 #[derive(Debug, Clone, Copy)]
@@ -6,7 +7,7 @@ pub struct LeapfrogVerlet;
 impl Propagator for LeapfrogVerlet {
     fn integrate<T: Real, const D: usize>(
         atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         sim_box: &crate::simulation_box::SimulationBox<T, D>,
         updater: &mut ForceUpdate<T, D>,
         dt: T,
@@ -85,7 +86,7 @@ mod tests {
         // propagating one step in time
         LeapfrogVerlet::integrate::<f32, 3>(
             &mut atom_store,
-            &Vec::new(),
+            &NeighborList::new_empty(),
             &sim_box,
             &mut ForceUpdate::new(),
             0.01,

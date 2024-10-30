@@ -1,3 +1,4 @@
+use crate::neighbor_list::NeighborList;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::Positions;
 use crate::{
@@ -28,7 +29,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
     pub fn update_forces(
         &mut self,
         atom_store: &mut AtomStore<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,
         temp: T,
         dt: T,
@@ -62,7 +63,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
     pub fn measure_energy(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) -> Option<T> {

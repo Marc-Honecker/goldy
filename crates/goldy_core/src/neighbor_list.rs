@@ -27,7 +27,7 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         x: &Positions<T, D>,
         atom_types: &AtomTypeStore<T>,
         sim_box: &SimulationBox<T, D>,
-        ppc: PairPotentialCollection<T>,
+        ppc: &PairPotentialCollection<T>,
     ) -> Self {
         let max_cutoff = ppc.get_cutoffs().iter().fold(T::zero(), |acc, &cutoff| {
             num_traits::Float::max(acc, cutoff + T::from(0.75).unwrap())
@@ -55,6 +55,16 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         nl
     }
 
+    pub fn new_empty() -> Self {
+        Self {
+            neighbor_lists: Vec::new(),
+            old_x: Positions::zeros(0),
+            skin: T::zero(),
+            offsets: [0; D],
+            num_bins: [0; D],
+        }
+    }
+
     /// Updates the neighbor list if needed.
     ///
     /// # Arguments
@@ -68,7 +78,7 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         x: &Positions<T, D>,
         atom_types: &AtomTypeStore<T>,
         sim_box: &SimulationBox<T, D>,
-        ppc: PairPotentialCollection<T>,
+        ppc: &PairPotentialCollection<T>,
     ) {
         if self.update_needed(x, sim_box) {
             self.old_x = x.clone();

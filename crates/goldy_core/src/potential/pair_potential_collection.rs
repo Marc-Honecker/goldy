@@ -1,13 +1,14 @@
 use derive_builder::Builder;
 use nalgebra::SVector;
 
+use crate::neighbor_list::NeighborList;
 use crate::potential::Potential;
 use crate::simulation_box::SimulationBox;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::{Forces, Positions};
 use crate::{potential::pair_potential::PairPotential, storage::atom_type::AtomType, Real};
 
-#[derive(Builder)]
+#[derive(Builder, Clone)]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct PairPotentialCollection<T: Real> {
     #[builder(setter(custom))]
@@ -20,45 +21,49 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
     fn measure_energy(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) -> T {
         // Iterating over all given atom-types, positions and the neighbor-list.
-        atom_types.iter().zip(x).zip(neighbor_list).fold(
-            // Initializing the accumulator to zero.
-            T::zero(),
-            |acc, ((curr_atom_type, curr_pos), neighbors)| {
-                // computing the energies off the curr_pos/neighbor pairs and updating the energy
-                acc + neighbors.iter().fold(T::zero(), |acc, &neighbor_idx| {
-                    // retrieving the neighbor position
-                    let neighbor_pos = x.get_by_idx(neighbor_idx);
-                    // retrieving the neighbor type
-                    let neighbor_type = atom_types.get_by_idx(neighbor_idx);
+        atom_types
+            .iter()
+            .zip(x)
+            .zip(&neighbor_list.neighbor_lists)
+            .fold(
+                // Initializing the accumulator to zero.
+                T::zero(),
+                |acc, ((curr_atom_type, curr_pos), neighbors)| {
+                    // computing the energies off the curr_pos/neighbor pairs and updating the energy
+                    acc + neighbors.iter().fold(T::zero(), |acc, &neighbor_idx| {
+                        // retrieving the neighbor position
+                        let neighbor_pos = x.get_by_idx(neighbor_idx);
+                        // retrieving the neighbor type
+                        let neighbor_type = atom_types.get_by_idx(neighbor_idx);
 
-                    // evaluating the potential energy
-                    let curr_energy = self
-                        .get_pair_potential(curr_atom_type, neighbor_type)
-                        .expect("Please provide a proper amount of `AtomType`s.")
-                        .energy(sim_box.sq_distance(curr_pos, neighbor_pos));
+                        // evaluating the potential energy
+                        let curr_energy = self
+                            .get_pair_potential(curr_atom_type, neighbor_type)
+                            .expect("Please provide a proper amount of `AtomType`s.")
+                            .energy(sim_box.sq_distance(curr_pos, neighbor_pos));
 
-                    acc + curr_energy
-                })
-            },
-        )
+                        acc + curr_energy
+                    })
+                },
+            )
     }
 
     fn update_forces(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         f: &mut Forces<T, D>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) {
         f.iter_mut()
             .zip(x)
-            .zip(neighbor_list)
+            .zip(&neighbor_list.neighbor_lists)
             .zip(atom_types)
             .for_each(|(((f, curr_pos), neighbors), curr_atom_type)| {
                 let f_trial = neighbors
@@ -73,7 +78,6 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
                         let pseudo_force = self
                             .get_pair_potential(curr_atom_type, neighbor_type)
                             .expect("Please provide a proper amount of `AtomType`s.")
-                            // FIXME: This line is buggy!
                             .pseudo_force(sim_box.sq_distance(curr_pos, neighbor_pos));
 
                         // updating the force

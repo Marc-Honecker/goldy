@@ -1,10 +1,10 @@
-use goldy_core::compute_neighbor_list;
+use goldy_core::neighbor_list::NeighborList;
 use goldy_core::propagator::velocity_verlet::VelocityVerlet;
 use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
 
 #[test]
-#[ignore]
+// #[ignore]
 fn argon_lennard_jones() {
     use assert_approx_eq::assert_approx_eq;
     use goldy_core::{
@@ -20,10 +20,10 @@ fn argon_lennard_jones() {
     };
 
     // simulation parameters
-    let dt = 1e-2;
-    let temp = 1.0;
-    let runs = 100_000;
-    let warm_ups = 20_000;
+    let dt = 5e-3;
+    let temp = 0.1;
+    let runs = 10_000;
+    let warm_ups = 2_000;
     let cutoff = 7.85723;
 
     // Argon
@@ -39,8 +39,6 @@ fn argon_lennard_jones() {
     // creating the directory, if it does not exist
     std::fs::create_dir_all("test_outputs").unwrap_or(());
 
-    lj.write_to_file("test_outputs/lj.out");
-
     // Lennard-Jones pair-potential
     let pair_potential = PairPotentialCollectionBuilder::default()
         .add_potential(&at, &at, lj)
@@ -49,20 +47,19 @@ fn argon_lennard_jones() {
 
     // the atoms
     let mut system = System::new_cubic(
-        Vector3::new(4, 4, 4),
-        0.45 * cutoff,
+        Vector3::new(6, 6, 6),
+        0.8 * cutoff,
         BoundaryTypes::Periodic,
         at,
     );
-    // let mut system = System::new_random(
-    //     Vector3::new(4.5 * cutoff, 4.5 * cutoff, 4.5 * cutoff),
-    //     BoundaryTypes::Periodic,
-    //     at,
-    //     864,
-    // );
 
     // the neighbor-list
-    let mut neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, 1.1 * cutoff);
+    let mut neighbor_list = NeighborList::new(
+        &system.atoms.x,
+        &system.atoms.atom_types,
+        &system.sim_box,
+        &pair_potential,
+    );
 
     // thermostat
     let langevin = Langevin::new();
@@ -70,23 +67,15 @@ fn argon_lennard_jones() {
     // creating the updater
     let mut updater = ForceUpdateBuilder::default()
         .thermostat(Box::new(langevin))
-        .potential(Box::new(pair_potential))
+        .potential(Box::new(pair_potential.clone()))
         .build();
 
     // kinetic energy moments
     let mut tkin_1 = 0.0;
     let (mut vpot_1, mut num_updates) = (0.0, 0);
 
-    // determines, when we need an update in the neighbor list
-    let need_update = 20;
-
     // the main MD-loop
     for i in 0..runs {
-        if (i + 1) % need_update == 0 {
-            // update neighbor list every few time steps
-            neighbor_list = compute_neighbor_list(&system.atoms.x, &system.sim_box, 1.1 * cutoff);
-        }
-
         if i % 1_000 == 0 {
             // writing out the simulation cell
             system.write_system_to_file(format!("test_outputs/cubic_cell_{i}.out").as_str());
@@ -100,6 +89,13 @@ fn argon_lennard_jones() {
             &mut updater,
             dt,
             temp,
+        );
+
+        neighbor_list.update(
+            &system.atoms.x,
+            &system.atoms.atom_types,
+            &system.sim_box,
+            &pair_potential,
         );
 
         if i >= warm_ups {

@@ -1,5 +1,6 @@
 use nalgebra::Vector3;
 
+use goldy_core::neighbor_list::NeighborList;
 use goldy_core::{
     force_update::ForceUpdateBuilder,
     potential::harmonic_oscillator::HarmonicOscillatorBuilder,
@@ -51,7 +52,7 @@ fn main() {
         // stepping forward in time
         VelocityVerlet::integrate(
             &mut system.atoms,
-            &Vec::new(),
+            &NeighborList::new_empty(),
             &system.sim_box,
             &mut updater,
             dt,
@@ -63,7 +64,7 @@ fn main() {
             pot_energy += updater
                 .measure_energy(
                     &system.atoms.x,
-                    &Vec::new(),
+                    &NeighborList::new_empty(),
                     &system.sim_box,
                     &system.atoms.atom_types,
                 )

@@ -1,10 +1,11 @@
+use crate::neighbor_list::NeighborList;
 use crate::{
-    Real,
     simulation_box::SimulationBox,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions},
     },
+    Real,
 };
 
 pub mod harmonic_oscillator;
@@ -16,7 +17,7 @@ pub trait Potential<T: Real, const D: usize> {
     fn measure_energy(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) -> T;
@@ -25,7 +26,7 @@ pub trait Potential<T: Real, const D: usize> {
     fn update_forces(
         &self,
         x: &Positions<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         f: &mut Forces<T, D>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,

@@ -72,7 +72,13 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
                 let mut d = x1 - x2;
 
                 d.iter_mut().for_each(|x| {
-                    *x -= num_traits::Float::round(*x);
+                    // *x -= num_traits::Float::round(*x);
+                    // *x -= num_traits::Float::floor(*x + T::one());
+                    if *x > T::from(0.5).unwrap() {
+                        *x -= T::one();
+                    } else if *x < -T::from(0.5).unwrap() {
+                        *x += T::one();
+                    }
                 });
 
                 d = self.to_real(d);

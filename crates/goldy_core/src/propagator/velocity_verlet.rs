@@ -1,3 +1,4 @@
+use crate::neighbor_list::NeighborList;
 use crate::{
     force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
     storage::atom_store::AtomStore, Real,
@@ -8,7 +9,7 @@ pub struct VelocityVerlet;
 impl Propagator for VelocityVerlet {
     fn integrate<T: Real, const D: usize>(
         atom_store: &mut AtomStore<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,
         updater: &mut ForceUpdate<T, D>,
         dt: T,

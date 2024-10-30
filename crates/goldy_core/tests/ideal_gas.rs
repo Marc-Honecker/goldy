@@ -1,3 +1,5 @@
+use goldy_core::neighbor_list::NeighborList;
+
 #[test]
 #[ignore]
 fn ideal_gas() {
@@ -46,7 +48,7 @@ fn ideal_gas() {
         // propagating the system in time
         VelocityVerlet::integrate(
             &mut system.atoms,
-            &Vec::new(),
+            &NeighborList::new_empty(),
             &system.sim_box,
             &mut updater,
             dt,

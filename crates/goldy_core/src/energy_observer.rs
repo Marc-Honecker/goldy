@@ -1,4 +1,5 @@
 use crate::force_update::ForceUpdate;
+use crate::neighbor_list::NeighborList;
 use crate::storage::atom_store::AtomStore;
 use crate::system::System;
 use crate::Real;
@@ -36,7 +37,7 @@ impl<T: Real> EnergyObserver<T> {
         &mut self,
         system: &System<T, D>,
         updater: &ForceUpdate<T, D>,
-        neighbor_list: &Vec<Vec<usize>>,
+        neighbor_list: &NeighborList<T, D>,
     ) {
         if let Some(pot) = updater.measure_energy(
             &system.atoms.x,

@@ -1,13 +1,14 @@
 use derive_builder::Builder;
 
+use crate::neighbor_list::NeighborList;
 use crate::{
     potential::Potential,
-    Real,
     simulation_box::SimulationBox,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions},
     },
+    Real,
 };
 
 #[derive(Debug, Builder)]
@@ -20,7 +21,7 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     fn measure_energy(
         &self,
         x: &Positions<T, D>,
-        _: &Vec<Vec<usize>>,
+        _: &NeighborList<T, D>,
         _: &SimulationBox<T, D>,
         _: &AtomTypeStore<T>,
     ) -> T {
@@ -32,7 +33,7 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     fn update_forces(
         &self,
         x: &Positions<T, D>,
-        _: &Vec<Vec<usize>>,
+        _: &NeighborList<T, D>,
         f: &mut Forces<T, D>,
         _: &SimulationBox<T, D>,
         _: &AtomTypeStore<T>,
@@ -62,14 +63,13 @@ mod tests {
     use assert_approx_eq::assert_approx_eq;
     use nalgebra::Matrix3;
 
+    use super::*;
     use crate::{
         simulation_box::{BoundaryTypes, SimulationBoxBuilder},
         storage::{
             atom_type::AtomTypeBuilder, atom_type_store::AtomTypeStoreBuilder, vector::Velocities,
         },
     };
-
-    use super::*;
 
     #[test]
     fn test_harmonic_oscillator_with_one_atom() {
@@ -108,8 +108,15 @@ mod tests {
             // initializing the forces
             let mut f = Forces::<f32, 3>::zeros(1);
             // computing the Forces
-            potential.update_forces(&x, &Vec::new(), &mut f, &sim_box, &atom_types);
-            pot_energy += potential.measure_energy(&x, &Vec::new(), &sim_box, &atom_types);
+            potential.update_forces(
+                &x,
+                &NeighborList::new_empty(),
+                &mut f,
+                &sim_box,
+                &atom_types,
+            );
+            pot_energy +=
+                potential.measure_energy(&x, &NeighborList::new_empty(), &sim_box, &atom_types);
             // stepping forward in time
             f.iter_mut()
                 .zip(&atom_types)
@@ -163,8 +170,15 @@ mod tests {
             // initializing the forces
             let mut f = Forces::<f32, 3>::zeros(num_atoms);
             // computing the Forces
-            potential.update_forces(&x, &Vec::new(), &mut f, &sim_box, &atom_types);
-            pot_energy += potential.measure_energy(&x, &Vec::new(), &sim_box, &atom_types);
+            potential.update_forces(
+                &x,
+                &NeighborList::new_empty(),
+                &mut f,
+                &sim_box,
+                &atom_types,
+            );
+            pot_energy +=
+                potential.measure_energy(&x, &NeighborList::new_empty(), &sim_box, &atom_types);
             // stepping forward in time
             f.iter_mut()
                 .zip(&atom_types)
