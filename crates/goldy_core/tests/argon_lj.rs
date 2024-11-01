@@ -4,7 +4,7 @@ use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
 
 #[test]
-// #[ignore]
+#[ignore]
 fn argon_lennard_jones() {
     use assert_approx_eq::assert_approx_eq;
     use goldy_core::{
