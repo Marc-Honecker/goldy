@@ -101,7 +101,7 @@ impl_eval!(pseudo_force, pseudo_forces);
 impl_eval!(energy, energies);
 
 macro_rules! create_pair_potential {
-    ($func_name: ident, $name: ident, $factor: expr) => {
+    ($func_name: ident, $name: ident) => {
         impl<T: Real> PairPotential<T> {
             #[inline]
             pub fn $name(n: u32, m: u32, u0: T, r0: T, cutoff: T) -> Self {
@@ -117,27 +117,6 @@ macro_rules! create_pair_potential {
                 let energy_at_cutoff = Self::$func_name(u0, r0, n as i32, m as i32, cutoff);
                 // choosing the precision
                 let precision = T::from(1e-4).unwrap();
-
-                // computing sigma
-                let sigma = r0 * $factor;
-
-                // computing the slope at sigma and the resulting intercept
-                let left = Self::$func_name(
-                    u0,
-                    r0,
-                    n as i32,
-                    m as i32,
-                    Float::sqrt(sigma * sigma * (T::one() - precision)),
-                );
-                let right = Self::$func_name(
-                    u0,
-                    r0,
-                    n as i32,
-                    m as i32,
-                    Float::sqrt(sigma * sigma * (T::one() + precision)),
-                );
-
-                let force_at_sigma = (right - left) / (precision * sigma * sigma);
 
                 energies
                     .iter_mut()
@@ -155,9 +134,6 @@ macro_rules! create_pair_potential {
                         *energy = Self::$func_name(u0, r0, n as i32, m as i32, Float::sqrt(r_sq))
                             - energy_at_cutoff;
 
-                        // if Float::sqrt(r_sq) <= sigma {
-                        //     *force = force_at_sigma;
-                        // } else {
                         // computing the pseudo force by numerical derivative.
                         let left = Self::$func_name(
                             u0,
@@ -189,12 +165,8 @@ macro_rules! create_pair_potential {
     };
 }
 
-create_pair_potential!(
-    mie,
-    new_mie,
-    T::one() / Float::powf(T::from(2.0).unwrap(), T::one() / T::from(6.0).unwrap())
-);
-create_pair_potential!(morse, new_morse, T::zero());
+create_pair_potential!(mie, new_mie);
+create_pair_potential!(morse, new_morse);
 
 #[cfg(test)]
 mod tests {

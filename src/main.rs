@@ -19,15 +19,15 @@ fn main() {
         BoundaryTypes::Periodic,
         AtomTypeBuilder::default()
             .id(0)
-            .mass(39.95)
+            .mass(1.0)
             .damping(0.01)
             .build()
             .unwrap(),
     );
 
     // the md parameters
-    let runs = 1_000_000;
-    let warm_up_runs = 100_000;
+    let runs = 2_000;
+    let warm_up_runs = 600;
     let dt = 0.01;
     let temp = 1.0;
 

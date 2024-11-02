@@ -5,12 +5,21 @@ use crate::system::System;
 use crate::Real;
 
 /// This struct handles all energy observations.
+#[derive(Default)]
 pub struct EnergyObserver<T: Real> {
     kinetic_energies: Vec<T>,
     potential_energies: Vec<T>,
 }
 
 impl<T: Real> EnergyObserver<T> {
+    /// Creates a new empty `EnergyObserver`.
+    pub fn new() -> Self {
+        Self {
+            kinetic_energies: Vec::new(),
+            potential_energies: Vec::new(),
+        }
+    }
+
     /// Observes the kinetic energy.
     pub fn observe_kinetic_energy<const D: usize>(&mut self, atoms: &AtomStore<T, D>) {
         self.kinetic_energies.push(
@@ -28,7 +37,7 @@ impl<T: Real> EnergyObserver<T> {
     pub fn get_mean_kinetic_energy(&self) -> T {
         self.kinetic_energies
             .iter()
-            .fold(T::one(), |acc, &e| acc + e)
+            .fold(T::zero(), |acc, &e| acc + e)
             / T::from_usize(self.kinetic_energies.len()).unwrap()
     }
 
