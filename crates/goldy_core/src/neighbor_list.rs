@@ -83,48 +83,83 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         if self.update_needed(x, sim_box) {
             self.old_x = x.clone();
 
-            let mut new_neighbor_lists = vec![Vec::new(); x.len()];
+            if x.len() < 5_000 {
+                self.update_brute_force(x, atom_types, sim_box, ppc);
+            } else {
+                let mut new_neighbor_lists = vec![Vec::new(); x.len()];
 
-            // Building the binning list
-            let mut bin_list = vec![Vec::new(); self.num_bins.iter().product()];
+                // Building the binning list
+                let mut bin_list = vec![Vec::new(); self.num_bins.iter().product()];
 
-            x.iter().enumerate().for_each(|(id, x)| {
-                let idx = self.get_idx_from_conceptual(self.map_to_conceptual(x, sim_box));
+                x.iter().enumerate().for_each(|(id, x)| {
+                    let idx = self.get_idx_from_conceptual(self.map_to_conceptual(x, sim_box));
 
-                bin_list[idx].push((id, *x));
-            });
+                    bin_list[idx].push((id, *x));
+                });
 
-            // Building the actual neighbor list
-            let neighbor_bin_indices = self.create_neighbor_bin_indices();
+                // Building the actual neighbor list
+                let neighbor_bin_indices = self.create_neighbor_bin_indices();
 
-            for bin in bin_list.iter() {
-                for neighbor_bin_idx in neighbor_bin_indices.iter() {
-                    neighbor_bin_idx.iter().for_each(|&idx| {
-                        let neighbor_bin = &bin_list[idx];
+                for bin in bin_list.iter() {
+                    for neighbor_bin_idx in neighbor_bin_indices.iter() {
+                        neighbor_bin_idx.iter().for_each(|&idx| {
+                            let neighbor_bin = &bin_list[idx];
 
-                        for (id1, atom1) in bin.iter() {
-                            for (id2, atom2) in neighbor_bin.iter() {
-                                if id1 != id2 {
-                                    let at1 = atom_types.get_by_idx(*id1);
-                                    let at2 = atom_types.get_by_idx(*id2);
+                            for (id1, atom1) in bin.iter() {
+                                for (id2, atom2) in neighbor_bin.iter() {
+                                    if id1 != id2 {
+                                        let at1 = atom_types.get_by_idx(*id1);
+                                        let at2 = atom_types.get_by_idx(*id2);
 
-                                    let cutoff = ppc
-                                        .get_cutoff_by_atom_type(at1, at2)
-                                        .expect("Please provide a proper amount of `AtomType`s.");
+                                        let cutoff = ppc.get_cutoff_by_atom_type(at1, at2).expect(
+                                            "Please provide a proper amount of `AtomType`s.",
+                                        );
 
-                                    if sim_box.distance(atom1, atom2) + self.skin < cutoff {
-                                        new_neighbor_lists[*id1].push(*id2);
-                                        new_neighbor_lists[*id2].push(*id1);
+                                        if sim_box.distance(atom1, atom2) + self.skin < cutoff {
+                                            new_neighbor_lists[*id1].push(*id2);
+                                            new_neighbor_lists[*id2].push(*id1);
+                                        }
                                     }
                                 }
                             }
-                        }
-                    })
+                        })
+                    }
+                }
+
+                self.neighbor_lists = new_neighbor_lists;
+            }
+        }
+    }
+
+    fn update_brute_force(
+        &mut self,
+        x: &Positions<T, D>,
+        atom_types: &AtomTypeStore<T>,
+        sim_box: &SimulationBox<T, D>,
+        ppc: &PairPotentialCollection<T>,
+    ) {
+        self.old_x = x.clone();
+        let mut new_neighbor_lists = vec![Vec::new(); x.len()];
+
+        for (id1, atom1) in x.iter().enumerate() {
+            for (id2, atom2) in x.iter().enumerate() {
+                if id1 != id2 {
+                    let at1 = atom_types.get_by_idx(id1);
+                    let at2 = atom_types.get_by_idx(id2);
+
+                    let cutoff = ppc
+                        .get_cutoff_by_atom_type(at1, at2)
+                        .expect("Please provide a proper amount of `AtomType`s.");
+
+                    if sim_box.distance(atom1, atom2) < cutoff + self.skin {
+                        new_neighbor_lists[id1].push(id2);
+                        new_neighbor_lists[id2].push(id1);
+                    }
                 }
             }
-
-            self.neighbor_lists = new_neighbor_lists;
         }
+
+        self.neighbor_lists = new_neighbor_lists;
     }
 
     /// Creates indices for neighboring bins.

@@ -1,5 +1,6 @@
+use goldy_core::energy_observer::EnergyObserver;
 use goldy_core::neighbor_list::NeighborList;
-use goldy_core::propagator::velocity_verlet::VelocityVerlet;
+use goldy_core::propagator::leapfrog_verlet::LeapfrogVerlet;
 use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
 
@@ -20,10 +21,10 @@ fn argon_lennard_jones() {
     };
 
     // simulation parameters
-    let dt = 5e-3;
-    let temp = 0.1;
-    let runs = 10_000;
-    let warm_ups = 2_000;
+    let dt = 1e-2;
+    let temp = 1.0;
+    let runs = 15_000;
+    let warm_ups = 7_500;
     let cutoff = 7.85723;
 
     // Argon
@@ -47,11 +48,13 @@ fn argon_lennard_jones() {
 
     // the atoms
     let mut system = System::new_cubic(
-        Vector3::new(6, 6, 6),
-        0.8 * cutoff,
+        Vector3::new(10, 10, 10),
+        0.5 * cutoff,
         BoundaryTypes::Periodic,
         at,
     );
+
+    system.write_system_to_file("test_outputs/argon_0.out");
 
     // the neighbor-list
     let mut neighbor_list = NeighborList::new(
@@ -71,18 +74,14 @@ fn argon_lennard_jones() {
         .build();
 
     // kinetic energy moments
-    let mut tkin_1 = 0.0;
     let (mut vpot_1, mut num_updates) = (0.0, 0);
+
+    let mut observer = EnergyObserver::new();
 
     // the main MD-loop
     for i in 0..runs {
-        if i % 1_000 == 0 {
-            // writing out the simulation cell
-            system.write_system_to_file(format!("test_outputs/cubic_cell_{i}.out").as_str());
-        }
-
         // propagating the system in time
-        VelocityVerlet::integrate(
+        LeapfrogVerlet::integrate(
             &mut system.atoms,
             &neighbor_list,
             &system.sim_box,
@@ -100,15 +99,7 @@ fn argon_lennard_jones() {
 
         if i >= warm_ups {
             // measuring the kinetic energy
-            // TODO: move to Observer
-            let tkin_mean = 0.5
-                * system
-                    .atoms
-                    .v
-                    .iter()
-                    .zip(&system.atoms.atom_types)
-                    .map(|(&v, &t)| t.mass() * v.dot(&v))
-                    .sum::<f32>();
+            observer.observe_kinetic_energy(&system.atoms);
 
             if i % 1_000 == 0 {
                 let vpot_mean = updater
@@ -123,15 +114,8 @@ fn argon_lennard_jones() {
                 vpot_1 += vpot_mean;
                 num_updates += 1;
 
-                println!(
-                    "{i}, {}, {}",
-                    tkin_mean / system.number_of_atoms() as f32,
-                    vpot_mean / system.number_of_atoms() as f32
-                );
+                println!("{i}, {}", vpot_mean / system.number_of_atoms() as f32);
             }
-
-            // updating the moments
-            tkin_1 += tkin_mean;
         }
 
         // applying periodic boundary conditions
@@ -143,12 +127,13 @@ fn argon_lennard_jones() {
         assert!(system.validate())
     }
 
-    tkin_1 /= ((runs - warm_ups) * system.number_of_atoms()) as f32;
+    system.write_system_to_file(format!("test_outputs/argon_{runs}.out").as_str());
+
     vpot_1 /= (num_updates * system.number_of_atoms()) as f32;
 
-    println!("{tkin_1}, {vpot_1}");
+    println!("{vpot_1}");
 
     // this should hold
     let analytical_solution = 1.5 * temp;
-    assert_approx_eq!(analytical_solution, tkin_1, 1e-2 * analytical_solution);
+    assert_approx_eq!(analytical_solution, observer.get_mean_kinetic_energy(), 0.5);
 }
