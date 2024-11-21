@@ -1,11 +1,12 @@
 use derive_builder::Builder;
 
+use crate::storage::atom_type::AtomType;
 use crate::{
-    Real,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions, Velocities},
     },
+    Real,
 };
 
 #[derive(Debug, Clone, Builder)]
@@ -25,6 +26,13 @@ impl<T: Real, const D: usize> AtomStore<T, D> {
     /// Returns the number of atoms in this `AtomStore`.
     pub fn number_of_atoms(&self) -> usize {
         self.x.len()
+    }
+
+    pub fn get_number_of_atoms(&self, atom_type: &AtomType<T>) -> usize {
+        self.atom_types
+            .iter()
+            .filter(|at| at.id() == atom_type.id())
+            .count()
     }
 }
 

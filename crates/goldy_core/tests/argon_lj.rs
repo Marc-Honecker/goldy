@@ -1,6 +1,7 @@
 use goldy_core::energy_observer::EnergyObserver;
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::propagator::leapfrog_verlet::LeapfrogVerlet;
+use goldy_core::rdf::RDF;
 use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
 
@@ -23,8 +24,8 @@ fn argon_lennard_jones() {
     // simulation parameters
     let dt = 1e-2;
     let temp = 1.0;
-    let runs = 15_000;
-    let warm_ups = 7_500;
+    let runs = 25_000;
+    let warm_ups = 10_000;
     let cutoff = 7.85723;
 
     // Argon
@@ -35,7 +36,10 @@ fn argon_lennard_jones() {
         .build()
         .unwrap();
 
-    let lj = PairPotential::new_lennard_jones(120.0, 3.92862, cutoff);
+    let u0 = 120.0;
+    let r0 = 3.92862;
+
+    let lj = PairPotential::new_lennard_jones(u0, r0, cutoff);
 
     // creating the directory, if it does not exist
     std::fs::create_dir_all("test_outputs").unwrap_or(());
@@ -47,12 +51,7 @@ fn argon_lennard_jones() {
         .unwrap();
 
     // the atoms
-    let mut system = System::new_cubic(
-        Vector3::new(10, 10, 10),
-        0.5 * cutoff,
-        BoundaryTypes::Periodic,
-        at,
-    );
+    let mut system = System::new_cubic(Vector3::new(10, 10, 10), 3.0, BoundaryTypes::Periodic, at);
 
     system.write_system_to_file("test_outputs/argon_0.out");
 
@@ -66,6 +65,8 @@ fn argon_lennard_jones() {
 
     // thermostat
     let langevin = Langevin::new();
+
+    let mut rdf = RDF::new(&at, &system.atoms, 500, &pair_potential, 20.0);
 
     // creating the updater
     let mut updater = ForceUpdateBuilder::default()
@@ -101,6 +102,10 @@ fn argon_lennard_jones() {
             // measuring the kinetic energy
             observer.observe_kinetic_energy(&system.atoms);
 
+            if i % 100 == 0 {
+                rdf.measure(&system.atoms, &neighbor_list, &system.sim_box);
+            }
+
             if i % 1_000 == 0 {
                 let vpot_mean = updater
                     .measure_energy(
@@ -128,6 +133,8 @@ fn argon_lennard_jones() {
     }
 
     system.write_system_to_file(format!("test_outputs/argon_{runs}.out").as_str());
+
+    rdf.write("test_outputs/rdf.out");
 
     vpot_1 /= (num_updates * system.number_of_atoms()) as f32;
 
