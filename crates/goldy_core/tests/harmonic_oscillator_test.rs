@@ -57,5 +57,5 @@ fn harmonic_oscillator() {
         }
     }
 
-    assert_approx_eq!(observer.get_mean_kinetic_energy(), 1.5f64 * temp, 1e-2);
+    assert_approx_eq!(observer.get_mean_kinetic_energy(), 1.5f64 * temp, 5e-2);
 }

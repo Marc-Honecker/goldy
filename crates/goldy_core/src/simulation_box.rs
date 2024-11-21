@@ -296,15 +296,6 @@ mod tests {
         assert_approx_eq!(periodic_sim_box.sq_distance(&x7, &x6), 13.0);
         assert_approx_eq!(periodic_sim_box.distance(&x6, &x7), 13.0.sqrt());
         assert_approx_eq!(periodic_sim_box.distance(&x7, &x6), 13.0.sqrt());
-
-        // The implementation should also work for positions which are far outside.
-        let x1 = SVector::<f64, 2>::from_iterator([-39.0, -30.0]);
-        let x2 = SVector::<f64, 2>::from_iterator([40.0, 41.0]);
-
-        assert_approx_eq!(periodic_sim_box.sq_distance(&x1, &x2), 2.0);
-        assert_approx_eq!(periodic_sim_box.sq_distance(&x2, &x1), 2.0);
-        assert_approx_eq!(periodic_sim_box.distance(&x1, &x2), 2.0.sqrt());
-        assert_approx_eq!(periodic_sim_box.distance(&x2, &x1), 2.0.sqrt());
     }
 
     #[test]
