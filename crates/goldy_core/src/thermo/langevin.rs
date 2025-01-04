@@ -3,12 +3,10 @@ use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{uniform::SampleUniform, Distribution, Uniform};
 
+use crate::storage::atom_store::AtomStore;
 use crate::{
-    storage::{
-        atom_type_store::AtomTypeStore,
-        vector::{Forces, Velocities},
-    },
-    thermo::ForceDrivenThermostat,
+    storage::vector::{Forces, Velocities},
+    thermo::Thermostat,
     Real,
 };
 
@@ -33,31 +31,30 @@ where
     }
 }
 
-impl<T, const D: usize> ForceDrivenThermostat<T, D> for Langevin<T>
+impl<T, const D: usize> Thermostat<T, D> for Langevin<T>
 where
     T: Real + SampleUniform,
 {
-    fn thermo(
-        &mut self,
-        f: &mut Forces<T, D>,
-        v: &Velocities<T, D>,
-        types: &AtomTypeStore<T>,
-        temp: T,
-        dt: T,
-    ) {
-        f.iter_mut().zip(v).zip(types).for_each(|((f, v), ty)| {
-            // precomputing a constant
-            let dp = ty.mass() * ty.damping() / dt * (T::one() + ty.damping());
+    fn thermostat(&mut self, atoms: &mut AtomStore<T, D>, temp: T, dt: T) {
+        atoms
+            .f
+            .iter_mut()
+            .zip(&atoms.v)
+            .zip(&atoms.atom_types)
+            .for_each(|((f, v), ty)| {
+                // precomputing a constant
+                let dp = ty.mass() * ty.damping() / dt * (T::one() + ty.damping());
 
-            // adding the deterministic forces
-            *f -= v * dp;
+                // adding the deterministic forces
+                *f -= v * dp;
 
-            // Drawing the random vector.
-            let rand_vec = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
+                // Drawing the random vector.
+                let rand_vec =
+                    SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
 
-            // adding the random forces
-            *f += rand_vec * ComplexField::sqrt(T::from(6).unwrap() * dp / dt * temp);
-        });
+                // adding the random forces
+                *f += rand_vec * ComplexField::sqrt(T::from(6).unwrap() * dp / dt * temp);
+            });
     }
 }
 
@@ -72,13 +69,14 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::storage::atom_store::AtomStoreBuilder;
+    use crate::storage::vector::Positions;
     use crate::storage::{
         atom_type::AtomTypeBuilder,
         atom_type_store::AtomTypeStoreBuilder,
         vector::{Forces, Velocities},
     };
-
-    use super::*;
 
     #[test]
     fn test_langevin() {
@@ -93,8 +91,6 @@ mod tests {
         let mut langevin = Langevin::new();
 
         // the atoms
-        let v = Velocities::<f32, 3>::zeros(num_atoms);
-        let mut f = Forces::zeros(num_atoms);
         let types = AtomTypeStoreBuilder::default()
             .add_many(
                 AtomTypeBuilder::default()
@@ -107,21 +103,22 @@ mod tests {
             )
             .build();
 
+        let mut atoms = AtomStoreBuilder::default()
+            .positions(Positions::<f32, 3>::zeros(num_atoms))
+            .velocities(Velocities::zeros(num_atoms))
+            .forces(Forces::zeros(num_atoms))
+            .atom_types(types)
+            .build()
+            .unwrap();
+
         // performing one step in the thermostat
-        langevin.thermo(&mut f, &v, &types, temp, dt);
+        langevin.thermostat(&mut atoms, temp, dt);
 
-        // all forces must be in [-sqrt(6*m*gamma*T), sqrt(6*m*gamma*T)]
-        // let dp = mass * gamma / dt * (1.0 + gamma);
-        // let bound = (6.0 * dp / dt * temp).sqrt();
-        // assert!(f
-        //     .iter()
-        //     .all(|f| f.iter().all(|x| (-bound..bound).contains(x))));
-
-        // Some directions need to be negative ..
-        assert!(f.iter().any(|f| f.iter().any(|&x| x < 0.0)));
+        // Some directions need to be negative ...
+        assert!(atoms.f.iter().any(|f| f.iter().any(|&x| x < 0.0)));
         // ... and some positive.
         // In fact, this test ensures, that the thermostat really
         // did something.
-        assert!(f.iter().any(|f| f.iter().any(|&x| x > 0.0)));
+        assert!(atoms.f.iter().any(|f| f.iter().any(|&x| x > 0.0)));
     }
 }

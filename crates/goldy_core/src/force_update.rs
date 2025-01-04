@@ -3,12 +3,12 @@ use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::Positions;
 use crate::{
     potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
-    thermo::ForceDrivenThermostat, Real,
+    thermo::Thermostat, Real,
 };
 
 #[derive(Default)]
 pub struct ForceUpdate<T: Real, const D: usize> {
-    thermostat: Option<Box<dyn ForceDrivenThermostat<T, D>>>,
+    thermostat: Option<Box<dyn Thermostat<T, D>>>,
     potential: Option<Box<dyn Potential<T, D>>>,
 }
 
@@ -39,13 +39,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
 
         // Now we can apply the thermostat, if present.
         if let Some(thermostat) = &mut self.thermostat {
-            thermostat.thermo(
-                &mut atom_store.f,
-                &atom_store.v,
-                &atom_store.atom_types,
-                temp,
-                dt,
-            );
+            thermostat.thermostat(atom_store, temp, dt);
         }
 
         // And now the potential.
@@ -78,7 +72,7 @@ pub struct ForceUpdateBuilder<T, const D: usize>
 where
     T: Real,
 {
-    thermostat: Option<Box<dyn ForceDrivenThermostat<T, D>>>,
+    thermostat: Option<Box<dyn Thermostat<T, D>>>,
     potential: Option<Box<dyn Potential<T, D>>>,
 }
 
@@ -86,7 +80,7 @@ impl<T, const D: usize> ForceUpdateBuilder<T, D>
 where
     T: Real,
 {
-    pub fn thermostat(self, thermostat: Box<dyn ForceDrivenThermostat<T, D>>) -> Self {
+    pub fn thermostat(self, thermostat: Box<dyn Thermostat<T, D>>) -> Self {
         let mut new = self;
         new.thermostat = Some(thermostat);
 

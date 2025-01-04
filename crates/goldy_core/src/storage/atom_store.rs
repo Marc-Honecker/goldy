@@ -1,5 +1,3 @@
-use derive_builder::Builder;
-
 use crate::storage::atom_type::AtomType;
 use crate::{
     storage::{
@@ -8,6 +6,8 @@ use crate::{
     },
     Real,
 };
+
+use derive_builder::Builder;
 
 #[derive(Debug, Clone, Builder)]
 #[builder(build_fn(validate = "Self::validate"))]

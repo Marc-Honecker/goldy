@@ -1,20 +1,8 @@
-use crate::{
-    storage::{
-        atom_type_store::AtomTypeStore,
-        vector::{Forces, Velocities},
-    },
-    Real,
-};
+use crate::storage::atom_store::AtomStore;
+use crate::Real;
 
 pub mod langevin;
 
-pub trait ForceDrivenThermostat<T: Real, const D: usize> {
-    fn thermo(
-        &mut self,
-        f: &mut Forces<T, D>,
-        v: &Velocities<T, D>,
-        types: &AtomTypeStore<T>,
-        temp: T,
-        dt: T,
-    );
+pub trait Thermostat<T: Real, const D: usize> {
+    fn thermostat(&mut self, atoms: &mut AtomStore<T, D>, temp: T, dt: T);
 }
