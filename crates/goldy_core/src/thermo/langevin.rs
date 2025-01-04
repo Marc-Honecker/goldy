@@ -35,7 +35,7 @@ impl<T, const D: usize> Thermostat<T, D> for Langevin<T>
 where
     T: Real + SampleUniform,
 {
-    fn thermostat(&mut self, atoms: &mut AtomStore<T, D>, temp: T, dt: T) {
+    fn apply_thermostat(&mut self, atoms: &mut AtomStore<T, D>, temp: T, dt: T) {
         atoms
             .f
             .iter_mut()
@@ -112,7 +112,7 @@ mod tests {
             .unwrap();
 
         // performing one step in the thermostat
-        langevin.thermostat(&mut atoms, temp, dt);
+        langevin.apply_thermostat(&mut atoms, temp, dt);
 
         // Some directions need to be negative ...
         assert!(atoms.f.iter().any(|f| f.iter().any(|&x| x < 0.0)));

@@ -39,7 +39,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
 
         // Now we can apply the thermostat, if present.
         if let Some(thermostat) = &mut self.thermostat {
-            thermostat.thermostat(atom_store, temp, dt);
+            thermostat.apply_thermostat(atom_store, temp, dt);
         }
 
         // And now the potential.
