@@ -41,28 +41,32 @@ where
             .zip(&atom_store.atom_types)
             .zip(&mut self.g_old)
             .for_each(|((((x, v), f), at), g)| {
+                // compute some "constants"
                 let tau = at.mass() / at.damping();
-
-                let dt_half = dt / T::from(2.0).unwrap();
+                let d_time = dt / tau;
+                // println!("tau: {tau}, d_time: {d_time}");
+                // panic!();
+                let dt_half = d_time / (T::from(2.0).unwrap());
                 let c3 =
-                    num_traits::Float::exp(dt_half) * num_traits::Float::sinh(dt_half) / dt_half;
+                    num_traits::Float::exp(-dt_half) * num_traits::Float::sinh(dt_half) / dt_half;
                 let c3 = num_traits::Float::sqrt(c3);
 
-                let c_rv = c3 * dt;
-                let c_vv = num_traits::Float::exp(-dt / tau);
-                let c_vf = c_rv / at.mass();
-                let c_vg = num_traits::Float::sqrt(temp * dt / (T::from(2.0).unwrap() * at.mass()));
+                // compute the coefficients
+                let c_xv = c3 * dt;
+                let c_vf = c_xv / at.mass();
+                let c_vv = num_traits::Float::exp(-d_time);
+                let c_vg = num_traits::Float::sqrt(temp * d_time / (T::from(2.0).unwrap() * at.mass()));
                 let c_vg = c_vg * c3;
 
+                // update the atom
                 *v *= c_vv;
                 *v += *f * c_vf;
-
                 let g_new =
                     SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
                 *v += (*g + g_new) * c_vg;
                 *g = g_new;
 
-                *x += *v * c_rv;
+                *x += *v * c_xv;
             });
     }
 }
