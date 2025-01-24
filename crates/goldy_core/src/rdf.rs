@@ -83,13 +83,13 @@ impl<T: Real> RDF<T> {
             });
 
         let prefac_loc = self.pre_fac / simulation_box.compute_volume();
-        let (mut new_volume, mut old_volume) = (T::zero(), T::zero());
+        let mut old_volume = T::zero();
 
         for i in 0..self.num_intervals {
             let r_new =
                 num_traits::Float::min((T::from(i).unwrap() + T::one()) * self.dr, self.cutoff);
 
-            new_volume = num_traits::Float::powi(r_new, 3);
+            let new_volume = num_traits::Float::powi(r_new, 3);
             self.rdf_counter[i] += (new_volume - old_volume) * prefac_loc;
 
             if r_new >= self.cutoff {

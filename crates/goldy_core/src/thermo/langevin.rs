@@ -5,7 +5,6 @@ use rand_distr::{uniform::SampleUniform, Distribution, Uniform};
 
 use crate::storage::atom_store::AtomStore;
 use crate::{
-    storage::vector::{Forces, Velocities},
     thermo::Thermostat,
     Real,
 };
