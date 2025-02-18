@@ -107,7 +107,9 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
 
                             for (id1, atom1) in bin.iter() {
                                 for (id2, atom2) in neighbor_bin.iter() {
-                                    if id1 != id2 {
+                                    // Here, I use the constrained that the order of the atoms stays the same at all points in time.
+                                    // Therefore, I can use it as a simple pruning strategy and need only half of the atoms.
+                                    if id1 > id2 {
                                         let at1 = atom_types.get_by_idx(*id1);
                                         let at2 = atom_types.get_by_idx(*id2);
 
@@ -143,7 +145,9 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
 
         for (id1, atom1) in x.iter().enumerate() {
             for (id2, atom2) in x.iter().enumerate() {
-                if id1 != id2 {
+                // Here, I use the constraint that the order of the atoms stays the same at all points in time.
+                // Therefore, I can use it as a simple pruning strategy and need only half of the atoms.
+                if id1 < id2 {
                     let at1 = atom_types.get_by_idx(id1);
                     let at2 = atom_types.get_by_idx(id2);
 
@@ -152,8 +156,8 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
                         .expect("Please provide a proper amount of `AtomType`s.");
 
                     if sim_box.distance(atom1, atom2) < cutoff + self.skin {
+                        // remember to use only one ID.
                         new_neighbor_lists[id1].push(id2);
-                        new_neighbor_lists[id2].push(id1);
                     }
                 }
             }

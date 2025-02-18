@@ -24,8 +24,8 @@ fn argon_lennard_jones() {
     // simulation parameters
     let dt = 1e-2;
     let temp = 1.0;
-    let runs = 25_000;
-    let warm_ups = 10_000;
+    let runs = 10_000;
+    let warm_ups = 5_000;
     let cutoff = 7.85723;
 
     // Argon
@@ -51,7 +51,7 @@ fn argon_lennard_jones() {
         .unwrap();
 
     // the atoms
-    let mut system = System::new_cubic(Vector3::new(10, 10, 10), 3.0, BoundaryTypes::Periodic, at);
+    let mut system = System::new_cubic(Vector3::new(10, 10, 10), 6.0, BoundaryTypes::Periodic, at);
 
     system.write_system_to_file("test_outputs/argon_0.out");
 
