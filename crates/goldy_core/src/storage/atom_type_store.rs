@@ -3,6 +3,8 @@ use crate::{
     Real,
 };
 
+use super::iterator::IterMut;
+
 #[derive(Debug, Default, Clone)]
 pub struct AtomTypeStore<T: Real> {
     // The data-layout will most likely change!
@@ -54,6 +56,11 @@ impl<T: Real> AtomTypeStore<T> {
     /// Returns an iterator over the `AtomType`s.
     pub fn iter(&self) -> Iter<AtomType<T>> {
         Iter::new(self.data.iter())
+    }
+
+    /// Returns a mutable iterator over the data.
+    pub fn iter_mut(&mut self) -> IterMut<AtomType<T>> {
+        IterMut::new(self.data.iter_mut())
     }
 
     /// Returns the length of the data
