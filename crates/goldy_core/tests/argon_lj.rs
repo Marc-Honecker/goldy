@@ -1,6 +1,6 @@
 use goldy_core::energy_observer::EnergyObserver;
 use goldy_core::neighbor_list::NeighborList;
-use goldy_core::propagator::leapfrog_verlet::LeapfrogVerlet;
+use goldy_core::propagator::velocity_verlet::VelocityVerlet;
 use goldy_core::rdf::RDF;
 use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
@@ -22,10 +22,10 @@ fn argon_lennard_jones() {
     };
 
     // simulation parameters
-    let dt = 1e-2;
-    let temp = 1.0;
-    let runs = 10_000;
-    let warm_ups = 5_000;
+    let dt = 1e-3;
+    let temp = 0.7;
+    let runs = 40_000;
+    let warm_ups = 20_000;
     let cutoff = 7.85723;
 
     // Argon
@@ -51,7 +51,7 @@ fn argon_lennard_jones() {
         .unwrap();
 
     // the atoms
-    let mut system = System::new_cubic(Vector3::new(10, 10, 10), 6.0, BoundaryTypes::Periodic, at);
+    let mut system = System::new_cubic(Vector3::new(12, 12, 12), 4.0, BoundaryTypes::Periodic, at);
 
     system.write_system_to_file("test_outputs/argon_0.out");
 
@@ -66,7 +66,7 @@ fn argon_lennard_jones() {
     // thermostat
     let langevin = Langevin::new();
 
-    let mut rdf = RDF::new(&at, &system.atoms, 500, &pair_potential, 20.0);
+    let mut rdf = RDF::new(&at, &system.atoms, 1000, &pair_potential, 50.0);
 
     // creating the updater
     let mut updater = ForceUpdateBuilder::default()
@@ -82,7 +82,7 @@ fn argon_lennard_jones() {
     // the main MD-loop
     for i in 0..runs {
         // propagating the system in time
-        LeapfrogVerlet::integrate(
+        VelocityVerlet::integrate(
             &mut system.atoms,
             &neighbor_list,
             &system.sim_box,
