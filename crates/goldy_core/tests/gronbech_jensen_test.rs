@@ -11,13 +11,13 @@ fn gronbech_jensen() {
     // simulation parameters
     let dt = 0.01;
     let temp = 1.0;
-    let runs = 15_000;
-    let warm_up = 5_000;
+    let runs = 640_000;
+    let warm_up = 128_000;
 
     // Argon
     let at = AtomTypeBuilder::default()
         .id(0)
-        .damping(100.0)
+        .damping(20.0)
         .mass(39.95)
         .build()
         .unwrap();
@@ -55,5 +55,5 @@ fn gronbech_jensen() {
 
     // this should hold
     let analytical_solution = 1.5 * temp;
-    assert_approx_eq!(analytical_solution, tkin_1, 1e-3 * analytical_solution);
+    assert_approx_eq!(analytical_solution, tkin_1, 1e-6 * analytical_solution);
 }
