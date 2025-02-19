@@ -22,11 +22,10 @@ fn kob_andersen() {
     };
 
     // simulation parameters
-    let dt = 1e-2;
-    let temp = 1.0;
-    let runs = 20_000;
-    let warm_ups = 10_000;
-    let cutoff = 7.85723;
+    let dt = 5e-3;
+    let temp = 0.466;
+    let runs = 200_000;
+    let warm_ups = 100_000;
 
     // creating atomtype A
     let at_a = AtomTypeBuilder::default()
@@ -45,11 +44,27 @@ fn kob_andersen() {
         .unwrap();
 
     // AA interaction: \epsilon = 1.0, \sigma = 1.0
-    let lj_aa = PairPotential::new_lennard_jones(1.0 * 6.0, 1.0 * 2f32.powf(1.0 / 6.0), cutoff);
+    let (epsilon_aa, sigma_aa) = (1.0, 1.0);
     // AB interaction: \epsilon = 1.5, \sigma = 0.8
-    let lj_ab = PairPotential::new_lennard_jones(1.5 * 6.0, 0.8 * 2f32.powf(1.0 / 6.0), cutoff);
+    let (epsilon_ab, sigma_ab) = (1.5, 0.8);
     // BB interaction: \epsilon = 0.5, \sigma = 0.88
-    let lj_bb = PairPotential::new_lennard_jones(0.5 * 6.0, 0.88 * 2f32.powf(1.0 / 6.0), cutoff);
+    let (epsilon_bb, sigma_bb) = (0.5, 0.88);
+
+    let lj_aa = PairPotential::new_lennard_jones(
+        epsilon_aa,
+        sigma_aa * 2f32.powf(1.0 / 6.0),
+        2.5 * sigma_aa,
+    );
+    let lj_ab = PairPotential::new_lennard_jones(
+        epsilon_ab,
+        sigma_ab * 2f32.powf(1.0 / 6.0),
+        2.5 * sigma_ab,
+    );
+    let lj_bb = PairPotential::new_lennard_jones(
+        epsilon_bb,
+        sigma_bb * 2f32.powf(1.0 / 6.0),
+        2.5 * sigma_bb,
+    );
 
     // creating the directory, if it does not exist
     std::fs::create_dir_all("test_outputs").unwrap_or(());
@@ -63,8 +78,12 @@ fn kob_andersen() {
         .unwrap();
 
     // setting up the atoms by first setting all atomtypes to A
-    let mut system =
-        System::new_cubic(Vector3::new(12, 12, 12), 5.0, BoundaryTypes::Periodic, at_a);
+    let mut system = System::new_cubic(
+        Vector3::new(9, 9, 9),
+        9.4 / 10.0,
+        BoundaryTypes::Periodic,
+        at_a,
+    );
 
     // and than changing 20% to B
     let mut rng = rand::thread_rng();
@@ -155,5 +174,9 @@ fn kob_andersen() {
 
     // this should hold
     let analytical_solution = 1.5 * temp;
-    assert_approx_eq!(analytical_solution, observer.get_mean_kinetic_energy(), 0.5);
+    assert_approx_eq!(
+        analytical_solution,
+        observer.get_mean_kinetic_energy(),
+        3.0e-2
+    );
 }
