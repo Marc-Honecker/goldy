@@ -22,8 +22,8 @@ where
     /// Creates a new `Langevin`-thermostat.
     pub fn new() -> Self {
         Self {
-            rng: ChaChaRng::from_entropy(),
-            distr: Uniform::<T>::new_inclusive(-T::one(), T::one()),
+            rng: ChaChaRng::from_os_rng(),
+            distr: Uniform::<T>::new_inclusive(-T::one(), T::one()).unwrap(),
         }
     }
 }

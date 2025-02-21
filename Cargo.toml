@@ -9,8 +9,8 @@ edition = "2021"
 
 [dependencies]
 nalgebra = { version = "0.33" }
-rand = "0.8.5"
-rand_chacha = "0.3.1"
+rand = "0.9"
+rand_chacha = "0.9"
 rand_distr = "0.4.3"
 
 goldy_core = { path = "./crates/goldy_core" }

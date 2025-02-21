@@ -1,6 +1,5 @@
 use nalgebra::SVector;
-use rand::distributions::Uniform;
-use rand::SeedableRng;
+use rand::{distr::Uniform, SeedableRng};
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, Normal};
 
@@ -14,7 +13,7 @@ where
     rand_distr::StandardNormal: Distribution<T>,
 {
     pub fn new_gaussian(n: usize, mean: T, std_dev: T) -> Self {
-        let mut rng = ChaChaRng::from_entropy();
+        let mut rng = ChaChaRng::from_os_rng();
         let gauss = Normal::new(mean, std_dev).unwrap();
 
         let x = (0..n)
@@ -27,11 +26,13 @@ where
 
 impl<T, const D: usize> Positions<T, D>
 where
-    T: Real + rand_distr::uniform::SampleUniform,
+    T: Real + rand_distr::uniform::SampleUniform + rand::distr::uniform::SampleUniform,
 {
     pub fn new_uniform(lengths: &SVector<T, D>, n: usize) -> Self {
+        use rand::distr::Distribution;
+
         // initializing the RNG
-        let mut rng = ChaChaRng::from_entropy();
+        let mut rng = ChaChaRng::from_os_rng();
         // initializing the uniform samplers
         let samplers: Vec<_> = lengths
             .iter()
@@ -40,6 +41,7 @@ where
                     num_traits::Float::min(T::zero(), x),
                     num_traits::Float::max(T::zero(), x),
                 )
+                .unwrap()
             })
             .collect();
 

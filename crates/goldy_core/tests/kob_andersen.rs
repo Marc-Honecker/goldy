@@ -86,9 +86,9 @@ fn kob_andersen() {
     );
 
     // and than changing 20% to B
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     system.atoms.atom_types.iter_mut().for_each(|at| {
-        if rng.gen_range(0.0..1.0) > 0.8 {
+        if rng.random_range(0.0..1.0) > 0.8 {
             *at = at_b;
         }
     });

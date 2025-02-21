@@ -23,7 +23,7 @@ where
     StandardNormal: Distribution<T>,
 {
     pub fn new() -> Self {
-        let rng = ChaChaRng::from_entropy();
+        let rng = ChaChaRng::from_os_rng();
         let distr = StandardNormal;
 
         Self {

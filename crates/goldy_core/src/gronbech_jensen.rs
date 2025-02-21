@@ -1,7 +1,7 @@
 use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use crate::Real;
 use nalgebra::SVector;
-use rand_chacha::rand_core::SeedableRng;
+use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, StandardNormal};
 
@@ -21,7 +21,7 @@ where
     StandardNormal: Distribution<T>,
 {
     pub fn new(num_atoms: usize) -> Self {
-        let mut rng = ChaChaRng::from_entropy();
+        let mut rng = ChaChaRng::from_os_rng();
         let distr = StandardNormal;
 
         let mut g_old = vec![SVector::<T, D>::zeros(); num_atoms];

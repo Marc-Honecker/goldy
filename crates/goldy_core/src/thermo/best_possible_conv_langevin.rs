@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use crate::Real;
 use nalgebra::SVector;
-use rand_chacha::rand_core::SeedableRng;
+use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, StandardNormal};
 
@@ -23,7 +23,7 @@ where
     StandardNormal: Distribution<T>,
 {
     pub fn new() -> Self {
-        let rng = ChaChaRng::from_entropy();
+        let rng = ChaChaRng::from_os_rng();
         let distr = StandardNormal;
 
         Self {

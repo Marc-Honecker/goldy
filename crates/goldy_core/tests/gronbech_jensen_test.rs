@@ -8,9 +8,7 @@ use goldy_core::potential::harmonic_oscillator::HarmonicOscillatorBuilder;
 use goldy_core::potential::Potential;
 use goldy_core::simulation_box::BoundaryTypes;
 use goldy_core::storage::atom_type::AtomTypeBuilder;
-use goldy_core::storage::vector::{Iterable, Positions};
 use goldy_core::system::System;
-use goldy_core::Real;
 use nalgebra::SVector;
 
 const DIM: usize = 3;
@@ -73,8 +71,8 @@ fn gronbech_jensen() {
         }
     }
 
-    let sec_moment = compute_nth_moment(&system.atoms.x, 2).sum() / DIM as f64;
-    let fourth_moment = compute_nth_moment(&system.atoms.x, 4).sum() / DIM as f64;
+    let sec_moment = observer.compute_nth_moment(&system.atoms.x, 2);
+    let fourth_moment = observer.compute_nth_moment(&system.atoms.x, 4);
 
     println!("\n{}\n", fourth_moment / sec_moment.powi(2));
 
@@ -85,24 +83,4 @@ fn gronbech_jensen() {
         observer.get_mean_kinetic_energy(),
         1e-2 * analytical_solution
     );
-}
-
-fn compute_mean<T: Real, const D: usize>(x: &Positions<T, D>) -> SVector<T, D> {
-    x.iter().fold(SVector::zeros(), |acc, x| acc + x) / T::from(x.len()).unwrap()
-}
-
-fn compute_nth_moment<T: Real, const D: usize>(x: &Positions<T, D>, n: usize) -> SVector<T, D> {
-    assert!(n > 1, "Please use compute_mean()");
-
-    // computing the mean
-    let mean = compute_mean(x);
-
-    x.iter().fold(SVector::zeros(), |acc, x| {
-        // |x - \mu|
-        let mut diff = x - mean;
-        // d_j = d_j^n
-        diff.apply(|d| *d = num_traits::Float::powi(*d, n as i32));
-        // sum over all |x - \mu|^n
-        acc + diff
-    }) / T::from(x.len()).unwrap()
 }
