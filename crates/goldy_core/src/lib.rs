@@ -3,7 +3,7 @@ use num_traits::Float;
 
 use error::GoldyError;
 
-pub mod energy_observer;
+pub mod observer;
 pub mod error;
 pub mod force_update;
 pub mod gronbech_jensen;

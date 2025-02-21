@@ -1,4 +1,4 @@
-use goldy_core::energy_observer::Observer;
+use goldy_core::observer::Observer;
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::propagator::leapfrog_verlet::LeapfrogVerlet;
 use goldy_core::thermo::langevin::Langevin;

@@ -1,5 +1,5 @@
 use assert_approx_eq::assert_approx_eq;
-use goldy_core::energy_observer::Observer;
+use goldy_core::observer::Observer;
 use goldy_core::simulation_box::BoundaryTypes;
 use goldy_core::storage::atom_type::AtomTypeBuilder;
 use goldy_core::storage::vector::{Iterable, Positions};

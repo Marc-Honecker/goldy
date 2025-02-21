@@ -1,5 +1,5 @@
-use goldy_core::energy_observer::Observer;
 use goldy_core::neighbor_list::NeighborList;
+use goldy_core::observer::Observer;
 use goldy_core::propagator::velocity_verlet::VelocityVerlet;
 use goldy_core::rdf::RDF;
 use goldy_core::thermo::langevin::Langevin;

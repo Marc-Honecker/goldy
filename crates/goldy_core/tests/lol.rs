@@ -1,5 +1,5 @@
 use assert_approx_eq::assert_approx_eq;
-use goldy_core::energy_observer::Observer;
+use goldy_core::observer::Observer;
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::potential::harmonic_oscillator::HarmonicOscillatorBuilder;
 use goldy_core::potential::Potential;
