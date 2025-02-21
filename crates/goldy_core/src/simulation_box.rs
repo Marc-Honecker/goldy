@@ -4,6 +4,7 @@ use derive_builder::Builder;
 use nalgebra as na;
 use nalgebra::{SMatrix, SVector};
 
+use crate::storage::vector::Iterable;
 use crate::{storage::vector::Positions, Real};
 
 #[derive(Debug, Builder, PartialEq, Eq)]

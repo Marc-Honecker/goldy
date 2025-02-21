@@ -2,5 +2,5 @@
 Cargo.lock
 .idea/
 *.out
-crates/test_outputs
+test_outputs
 *.zip

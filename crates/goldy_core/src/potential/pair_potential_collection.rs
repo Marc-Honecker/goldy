@@ -7,7 +7,7 @@ use crate::neighbor_list::NeighborList;
 use crate::potential::Potential;
 use crate::simulation_box::SimulationBox;
 use crate::storage::atom_type_store::AtomTypeStore;
-use crate::storage::vector::{Forces, Positions};
+use crate::storage::vector::{Forces, Iterable, Positions};
 use crate::{potential::pair_potential::PairPotential, storage::atom_type::AtomType, Real};
 
 #[derive(Builder, Clone)]

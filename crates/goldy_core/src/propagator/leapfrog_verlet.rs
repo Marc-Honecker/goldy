@@ -1,4 +1,5 @@
 use crate::neighbor_list::NeighborList;
+use crate::storage::vector::Iterable;
 use crate::{force_update::ForceUpdate, propagator::Propagator, Real};
 
 #[derive(Debug, Clone, Copy)]

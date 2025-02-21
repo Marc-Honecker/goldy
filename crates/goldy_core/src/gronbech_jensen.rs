@@ -1,4 +1,4 @@
-use crate::storage::atom_store::AtomStore;
+use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use crate::Real;
 use nalgebra::SVector;
 use rand_chacha::rand_core::SeedableRng;
@@ -40,32 +40,27 @@ where
             .zip(&mut atom_store.f)
             .zip(&atom_store.atom_types)
             .zip(&mut self.g_old)
-            .for_each(|((((x, v), f), at), g)| {
+            .for_each(|((((x, v), f), at), g_old)| {
                 // compute some "constants"
                 let tau = at.mass() / at.damping();
-                let d_time = dt / tau;
-                let dt_half = d_time / (T::from(2.0).unwrap());
-                let c3 =
-                    num_traits::Float::exp(-dt_half) * num_traits::Float::sinh(dt_half) / dt_half;
-                let c3 = num_traits::Float::sqrt(c3);
-
-                // compute the coefficients
-                let c_xv = c3 * dt;
+                let c_vv = num_traits::Float::exp(-dt / tau);
+                let c_xv = num_traits::Float::sqrt((T::one() - c_vv) * tau * dt);
                 let c_vf = c_xv / at.mass();
-                let c_vv = num_traits::Float::exp(-d_time);
-                let c_vg =
-                    num_traits::Float::sqrt(temp * d_time / (T::from(2.0).unwrap() * at.mass()));
-                let c_vg = c_vg * c3;
+                let c_vg = num_traits::Float::sqrt(
+                    (T::one() - c_vv) * temp / (T::from(2.0).unwrap() * at.mass()),
+                );
 
-                // update the atom
-                *v *= c_vv;
-                *v += *f * c_vf;
+                // drawing a new random number
                 let g_new =
                     SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));
-                *v += (*g + g_new) * c_vg;
-                *g = g_new;
 
-                *x += *v * c_xv;
+                // updating the velocity
+                *v = *v * c_vv + *f * c_vf + (*g_old + g_new) * c_vg;
+                // the new random number becomes the new g_old
+                *g_old = g_new;
+
+                // updating the position
+                *x = *x + *v * c_xv;
             });
     }
 }

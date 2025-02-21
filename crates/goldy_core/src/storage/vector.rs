@@ -6,6 +6,20 @@ use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::iterator::{Iter, IterMut};
 use crate::Real;
 
+pub trait Iterable {
+    type Item;
+
+    fn iter(&self) -> Iter<Self::Item>;
+
+    fn iter_mut(&mut self) -> IterMut<Self::Item>;
+
+    fn len(&self) -> usize;
+
+    fn is_empty(&self) -> bool;
+
+    fn get_by_idx(&self, idx: usize) -> &Self::Item;
+}
+
 macro_rules! generate_structs {
     ($type_name: ident) => {
         #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,29 +27,31 @@ macro_rules! generate_structs {
             pub(super) data: Vec<SVector<T, D>>,
         }
 
-        impl<T, const D: usize> $type_name<T, D> {
+        impl<T, const D: usize> Iterable for $type_name<T, D> {
+            type Item = SVector<T, D>;
+
             /// Returns an iterator over the data.
-            pub fn iter(&self) -> Iter<SVector<T, D>> {
+            fn iter(&self) -> Iter<Self::Item> {
                 Iter::new(self.data.iter())
             }
 
             /// Returns a mutable iterator over the data.
-            pub fn iter_mut(&mut self) -> IterMut<SVector<T, D>> {
+            fn iter_mut(&mut self) -> IterMut<Self::Item> {
                 IterMut::new(self.data.iter_mut())
             }
 
             /// Returns the length of the data
-            pub fn len(&self) -> usize {
+            fn len(&self) -> usize {
                 self.data.len()
             }
 
             /// Tests, if the data is empty.
-            pub fn is_empty(&self) -> bool {
+            fn is_empty(&self) -> bool {
                 self.data.is_empty()
             }
 
             /// Returns the element at the given index.
-            pub fn get_by_idx(&self, idx: usize) -> &SVector<T, D> {
+            fn get_by_idx(&self, idx: usize) -> &Self::Item {
                 &self.data[idx]
             }
         }

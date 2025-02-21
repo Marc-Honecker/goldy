@@ -1,6 +1,7 @@
 use derive_builder::Builder;
 
 use crate::neighbor_list::NeighborList;
+use crate::storage::vector::Iterable;
 use crate::{
     potential::Potential,
     simulation_box::SimulationBox,

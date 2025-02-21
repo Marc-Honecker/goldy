@@ -1,7 +1,7 @@
 use crate::potential::pair_potential_collection::PairPotentialCollection;
 use crate::simulation_box::SimulationBox;
 use crate::storage::atom_type_store::AtomTypeStore;
-use crate::storage::vector::Positions;
+use crate::storage::vector::{Iterable, Positions};
 use crate::Real;
 use nalgebra::SVector;
 

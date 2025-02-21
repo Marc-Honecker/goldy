@@ -1,4 +1,4 @@
-use goldy_core::energy_observer::EnergyObserver;
+use goldy_core::energy_observer::Observer;
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::propagator::velocity_verlet::VelocityVerlet;
 use goldy_core::rdf::RDF;
@@ -77,7 +77,7 @@ fn argon_lennard_jones() {
     // kinetic energy moments
     let (mut vpot_1, mut num_updates) = (0.0, 0);
 
-    let mut observer = EnergyObserver::new();
+    let mut observer = Observer::new();
 
     // the main MD-loop
     for i in 0..runs {

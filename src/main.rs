@@ -1,3 +1,4 @@
+use goldy_core::storage::vector::Iterable;
 use nalgebra::Vector3;
 
 use goldy_core::neighbor_list::NeighborList;

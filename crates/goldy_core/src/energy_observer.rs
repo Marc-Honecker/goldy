@@ -1,17 +1,18 @@
 use crate::force_update::ForceUpdate;
 use crate::neighbor_list::NeighborList;
 use crate::storage::atom_store::AtomStore;
+use crate::storage::vector::Iterable;
 use crate::system::System;
 use crate::Real;
 
-/// This struct handles all energy observations.
+/// This struct handles all observations.
 #[derive(Default)]
-pub struct EnergyObserver<T: Real> {
+pub struct Observer<T: Real> {
     kinetic_energies: Vec<T>,
     potential_energies: Vec<T>,
 }
 
-impl<T: Real> EnergyObserver<T> {
+impl<T: Real> Observer<T> {
     /// Creates a new empty `EnergyObserver`.
     pub fn new() -> Self {
         Self {

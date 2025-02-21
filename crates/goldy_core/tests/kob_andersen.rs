@@ -1,4 +1,4 @@
-use goldy_core::energy_observer::EnergyObserver;
+use goldy_core::energy_observer::Observer;
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::propagator::leapfrog_verlet::LeapfrogVerlet;
 use goldy_core::thermo::langevin::Langevin;
@@ -115,7 +115,7 @@ fn kob_andersen() {
     // kinetic energy moments
     let (mut vpot_1, mut num_updates) = (0.0, 0);
 
-    let mut observer = EnergyObserver::new();
+    let mut observer = Observer::new();
 
     // the main MD-loop
     for i in 0..runs {

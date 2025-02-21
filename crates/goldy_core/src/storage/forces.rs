@@ -1,6 +1,8 @@
 use nalgebra::SVector;
 
-use crate::{Real, storage::vector::Forces};
+use crate::{storage::vector::Forces, Real};
+
+use super::vector::Iterable;
 
 impl<T: Real, const D: usize> Forces<T, D> {
     /// Sets all forces to zero.

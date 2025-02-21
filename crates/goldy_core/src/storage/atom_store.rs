@@ -9,6 +9,8 @@ use crate::{
 
 use derive_builder::Builder;
 
+use super::vector::Iterable;
+
 #[derive(Debug, Clone, Builder)]
 #[builder(build_fn(validate = "Self::validate"))]
 /// Stores the atoms of a simulation and ensures, that everything remains in sync.

@@ -4,10 +4,8 @@ use rand_chacha::ChaChaRng;
 use rand_distr::{uniform::SampleUniform, Distribution, Uniform};
 
 use crate::storage::atom_store::AtomStore;
-use crate::{
-    thermo::Thermostat,
-    Real,
-};
+use crate::storage::vector::Iterable;
+use crate::{thermo::Thermostat, Real};
 
 pub struct Langevin<T>
 where

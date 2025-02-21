@@ -1,6 +1,6 @@
 use assert_approx_eq::assert_approx_eq;
 
-use goldy_core::energy_observer::EnergyObserver;
+use goldy_core::energy_observer::Observer;
 use goldy_core::force_update::ForceUpdateBuilder;
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::potential::harmonic_oscillator::HarmonicOscillatorBuilder;
@@ -36,7 +36,7 @@ fn harmonic_oscillator() {
         .potential(Box::new(potential))
         .build();
 
-    let mut observer = EnergyObserver::default();
+    let mut observer = Observer::default();
 
     for i in 0..runs {
         LeapfrogVerlet::integrate(

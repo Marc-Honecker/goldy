@@ -1,4 +1,6 @@
-use goldy_core::neighbor_list::NeighborList;
+use std::{fs::OpenOptions, io::Write};
+
+use goldy_core::{neighbor_list::NeighborList, storage::vector::Iterable};
 
 #[test]
 #[ignore]
@@ -16,21 +18,22 @@ fn ideal_gas() {
     };
 
     // simulation parameters
-    let dt = 0.01;
+    let dt = 1.0e-2;
     let temp = 1.0;
-    let runs = 1_000_000;
-    let warm_up = 200_000;
+    let runs = 8 * 8 * 8 * 10_000;
+    let warm_up = 8 * 8 * 8 * 2_000;
+    let gamma = 1.25e-3;
 
     // Argon
     let at = AtomTypeBuilder::default()
         .id(0)
-        .damping(0.01)
+        .damping(gamma)
         .mass(39.95)
         .build()
         .unwrap();
 
     // the atoms
-    let mut system = System::new_cubic(Vector3::new(10, 10, 10), 2.0, BoundaryTypes::Open, at);
+    let mut system = System::new_cubic(Vector3::new(12, 12, 12), 3.0, BoundaryTypes::Open, at);
 
     // thermostat
     let langevin = Langevin::new();
@@ -64,14 +67,29 @@ fn ideal_gas() {
                     .iter()
                     .zip(&system.atoms.atom_types)
                     .map(|(&v, &t)| t.mass() * v.dot(&v))
-                    .sum::<f32>();
+                    .sum::<f64>();
 
             // updating the moments
             tkin_1 += tkin_mean;
         }
     }
 
-    tkin_1 /= ((runs - warm_up) * system.number_of_atoms()) as f32;
+    tkin_1 /= ((runs - warm_up) * system.number_of_atoms()) as f64;
+
+    // creating the directory, if it does not exist
+    std::fs::create_dir_all("test_outputs/thermostat_tests").unwrap_or(());
+
+    // creating output file, if it doesn't exist yet and appending otherwise
+    let mut kinetic_energy_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(format!(
+            "test_outputs/thermostat_tests/langevin_{dt}_{gamma}.out"
+        ))
+        .expect("Could not open file");
+    kinetic_energy_file
+        .write(format!("{tkin_1}\n").as_bytes())
+        .expect("writing failed");
 
     // this should hold
     let analytical_solution = 1.5 * temp;

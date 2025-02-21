@@ -3,6 +3,7 @@ use crate::potential::pair_potential_collection::PairPotentialCollection;
 use crate::simulation_box::SimulationBox;
 use crate::storage::atom_store::AtomStore;
 use crate::storage::atom_type::AtomType;
+use crate::storage::vector::Iterable;
 use crate::Real;
 use std::io::Write;
 

@@ -4,7 +4,9 @@ use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::{Real, storage::vector::Positions};
+use crate::{storage::vector::Positions, Real};
+
+use super::vector::Iterable;
 
 impl<T, const D: usize> Positions<T, D>
 where

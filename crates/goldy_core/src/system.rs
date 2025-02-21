@@ -10,7 +10,7 @@ use crate::{
         atom_store::{AtomStore, AtomStoreBuilder},
         atom_type::AtomType,
         atom_type_store::AtomTypeStoreBuilder,
-        vector::{Forces, Positions, Velocities},
+        vector::{Forces, Iterable, Positions, Velocities},
     },
     Real,
 };
