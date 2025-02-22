@@ -1,8 +1,8 @@
 use crate::neighbor_list::NeighborList;
 use crate::storage::vector::Iterable;
 use crate::{
-    force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
-    storage::atom_store::AtomStore, Real,
+    Real, force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore,
 };
 
 pub struct VelocityVerlet;

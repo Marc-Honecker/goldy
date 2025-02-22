@@ -1,8 +1,8 @@
+use crate::Real;
 use crate::potential::pair_potential_collection::PairPotentialCollection;
 use crate::simulation_box::SimulationBox;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::{Iterable, Positions};
-use crate::Real;
 use nalgebra::SVector;
 
 /// Struct representing a neighbor list for atoms in a simulation box.
@@ -311,7 +311,7 @@ fn generate_conceptual_indices_rec<const D: usize>(
 
 #[cfg(test)]
 mod tests {
-    use crate::neighbor_list::{generate_conceptual_indices, NeighborList};
+    use crate::neighbor_list::{NeighborList, generate_conceptual_indices};
     use crate::simulation_box::{BoundaryTypes, SimulationBoxBuilder};
     use crate::storage::vector::Positions;
     use nalgebra::{Matrix3, Vector3};

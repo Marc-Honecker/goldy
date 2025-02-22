@@ -1,6 +1,6 @@
 use crate::neighbor_list::NeighborList;
 use crate::storage::vector::Iterable;
-use crate::{force_update::ForceUpdate, propagator::Propagator, Real};
+use crate::{Real, force_update::ForceUpdate, propagator::Propagator};
 
 #[derive(Debug, Clone, Copy)]
 pub struct LeapfrogVerlet;

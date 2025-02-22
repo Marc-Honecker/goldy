@@ -1,5 +1,5 @@
-use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use crate::Real;
+use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use nalgebra::SVector;
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;

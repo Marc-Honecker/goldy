@@ -5,7 +5,7 @@ use nalgebra as na;
 use nalgebra::{SMatrix, SVector};
 
 use crate::storage::vector::Iterable;
-use crate::{storage::vector::Positions, Real};
+use crate::{Real, storage::vector::Positions};
 
 #[derive(Debug, Builder, PartialEq, Eq)]
 pub struct SimulationBox<T: Real, const D: usize> {
@@ -209,15 +209,17 @@ mod tests {
         );
 
         // Now let's create one with ...
-        assert!(SimulationBoxBuilder::<f32, 2>::default()
-            // ... an inappropriate hmatrix.
-            .hmatrix(SMatrix::zeros())
-            // The boundaries must be still okay.
-            .boundary_type(BoundaryTypes::Periodic)
-            // If we call build this time, ...
-            .build()
-            // ... it must fail.
-            .is_err());
+        assert!(
+            SimulationBoxBuilder::<f32, 2>::default()
+                // ... an inappropriate hmatrix.
+                .hmatrix(SMatrix::zeros())
+                // The boundaries must be still okay.
+                .boundary_type(BoundaryTypes::Periodic)
+                // If we call build this time, ...
+                .build()
+                // ... it must fail.
+                .is_err()
+        );
     }
 
     #[test]

@@ -1,8 +1,8 @@
 use derive_builder::Builder;
 
 use crate::{
-    force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
-    storage::atom_store::AtomStore, Real,
+    Real, force_update::ForceUpdate, propagator::Propagator, simulation_box::SimulationBox,
+    storage::atom_store::AtomStore,
 };
 
 #[allow(unused)]
@@ -82,8 +82,11 @@ mod tests {
             .time_step(-0.01)
             .build();
 
-        assert!(wrong_time_step
-            .is_err_and(|err| err.to_string() == "Please provide a time step greater than zero."));
+        assert!(
+            wrong_time_step.is_err_and(
+                |err| err.to_string() == "Please provide a time step greater than zero."
+            )
+        );
 
         // And now the same for the temperature.
         let wrong_temperature = SimulationParametersBuilder::default()

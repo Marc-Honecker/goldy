@@ -3,11 +3,11 @@ use num_traits::Float;
 
 use error::GoldyError;
 
-pub mod observer;
 pub mod error;
 pub mod force_update;
 pub mod gronbech_jensen;
 pub mod neighbor_list;
+pub mod observer;
 pub mod potential;
 pub mod propagator;
 pub mod rdf;

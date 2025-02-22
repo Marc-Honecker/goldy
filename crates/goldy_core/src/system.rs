@@ -5,6 +5,7 @@ use std::io::Write;
 use nalgebra::{SMatrix, SVector};
 
 use crate::{
+    Real,
     simulation_box::{BoundaryTypes, SimulationBox, SimulationBoxBuilder},
     storage::{
         atom_store::{AtomStore, AtomStoreBuilder},
@@ -12,7 +13,6 @@ use crate::{
         atom_type_store::AtomTypeStoreBuilder,
         vector::{Forces, Iterable, Positions, Velocities},
     },
-    Real,
 };
 
 pub struct System<T: Real, const D: usize> {

@@ -1,9 +1,9 @@
 use nalgebra::SVector;
-use rand::{distr::Uniform, SeedableRng};
+use rand::{SeedableRng, distr::Uniform};
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::{storage::vector::Positions, Real};
+use crate::{Real, storage::vector::Positions};
 
 use super::vector::Iterable;
 

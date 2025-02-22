@@ -1,5 +1,5 @@
-use crate::storage::atom_store::AtomStore;
 use crate::Real;
+use crate::storage::atom_store::AtomStore;
 
 pub mod best_possible_conv_langevin;
 pub mod langevin;

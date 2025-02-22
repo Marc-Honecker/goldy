@@ -1,11 +1,11 @@
 use std::f64::consts::PI;
 
 use assert_approx_eq::assert_approx_eq;
-use goldy_core::observer::Observer;
 use goldy_core::gronbech_jensen::GronbechJensen;
 use goldy_core::neighbor_list::NeighborList;
-use goldy_core::potential::harmonic_oscillator::HarmonicOscillatorBuilder;
+use goldy_core::observer::Observer;
 use goldy_core::potential::Potential;
+use goldy_core::potential::harmonic_oscillator::HarmonicOscillatorBuilder;
 use goldy_core::simulation_box::BoundaryTypes;
 use goldy_core::storage::atom_type::AtomTypeBuilder;
 use goldy_core::system::System;
@@ -18,10 +18,10 @@ const DIM: usize = 3;
 fn gronbech_jensen() {
     // simulation parameters
     let temp = 1.0;
-    let runs = 5_000;
-    let warm_up = 3_000;
-    let gamma = 1.0;
-    let mass = 10.0;
+    let runs = 2_000;
+    let warm_up = 1_000;
+    let gamma = 10.0;
+    let mass = 1.0;
 
     let period = 2.0 * PI * gamma / 2.0f64.sqrt() * mass;
     let dt = period / 10.0;

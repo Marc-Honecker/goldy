@@ -2,9 +2,9 @@ use std::fmt::Display;
 
 use nalgebra::SVector;
 
+use crate::Real;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::iterator::{Iter, IterMut};
-use crate::Real;
 
 pub trait Iterable {
     type Item;

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use crate::Real;
+use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use nalgebra::SVector;
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
@@ -47,7 +47,9 @@ where
                 let c_vf = num_traits::Float::sqrt(
                     tau * dt * (T::one() - c_vv * c_vv) / T::from(2.0).unwrap(),
                 ) / at.mass();
-                let c_vg = num_traits::Float::sqrt(T::from(2.0).unwrap() * dt * temp / tau);
+                let c_vg = num_traits::Float::sqrt(
+                    T::from(2.0).unwrap() * (T::one() - c_vv * c_vv) * temp / at.mass(),
+                );
                 let c_xv = num_traits::Float::sqrt(
                     T::from(2.0).unwrap() * tau * dt * (T::one() - c_vv) / (T::one() + c_vv),
                 );

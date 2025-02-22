@@ -1,11 +1,11 @@
 use nalgebra::{ComplexField, SVector};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
-use rand_distr::{uniform::SampleUniform, Distribution, Uniform};
+use rand_distr::{Distribution, Uniform, uniform::SampleUniform};
 
 use crate::storage::atom_store::AtomStore;
 use crate::storage::vector::Iterable;
-use crate::{thermo::Thermostat, Real};
+use crate::{Real, thermo::Thermostat};
 
 pub struct Langevin<T>
 where

@@ -1,10 +1,10 @@
 use crate::storage::atom_type::AtomType;
 use crate::{
+    Real,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions, Velocities},
     },
-    Real,
 };
 
 use derive_builder::Builder;
@@ -128,12 +128,14 @@ mod tests {
             .build();
 
         // This build should fail.
-        assert!(AtomStoreBuilder::default()
-            .positions(x)
-            .velocities(v)
-            .forces(f)
-            .atom_types(ats)
-            .build()
-            .is_err());
+        assert!(
+            AtomStoreBuilder::default()
+                .positions(x)
+                .velocities(v)
+                .forces(f)
+                .atom_types(ats)
+                .build()
+                .is_err()
+        );
     }
 }

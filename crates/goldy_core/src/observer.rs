@@ -1,11 +1,11 @@
 use nalgebra::SVector;
 
+use crate::Real;
 use crate::force_update::ForceUpdate;
 use crate::neighbor_list::NeighborList;
 use crate::storage::atom_store::AtomStore;
 use crate::storage::vector::Iterable;
 use crate::system::System;
-use crate::Real;
 
 /// This struct handles all observations.
 #[derive(Default)]
@@ -124,7 +124,7 @@ impl<T: Real> Observer<T> {
             diff.apply(|d| *d = num_traits::Float::powi(*d, n as i32));
 
             acc + diff
-        })
+        }) / T::from(observable.len()).unwrap()
     }
 
     #[inline]
@@ -151,5 +151,12 @@ mod tests {
         let mean_vector = observer.compute_mean_vector(&pos);
 
         assert_approx_eq!(mean_vector.sum(), 0.0);
+
+        let pos: Positions<f64, 3> = Positions::new_gaussian(20_000, 1.0, 1.0);
+        let mean_vector = observer.compute_mean_vector(&pos);
+        let mean = observer.compute_mean(&pos);
+
+        assert_approx_eq!(mean_vector.sum(), 3.0, 0.05);
+        assert_approx_eq!(mean, 1.0, 0.05);
     }
 }

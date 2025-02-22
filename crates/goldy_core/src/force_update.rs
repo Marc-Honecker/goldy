@@ -2,8 +2,8 @@ use crate::neighbor_list::NeighborList;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::Positions;
 use crate::{
-    potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
-    thermo::Thermostat, Real,
+    Real, potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
+    thermo::Thermostat,
 };
 
 #[derive(Default)]

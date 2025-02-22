@@ -1,6 +1,6 @@
 use crate::neighbor_list::NeighborList;
 use crate::{
-    force_update::ForceUpdate, simulation_box::SimulationBox, storage::atom_store::AtomStore, Real,
+    Real, force_update::ForceUpdate, simulation_box::SimulationBox, storage::atom_store::AtomStore,
 };
 
 pub mod leapfrog_verlet;

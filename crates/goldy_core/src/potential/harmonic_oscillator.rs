@@ -3,13 +3,13 @@ use derive_builder::Builder;
 use crate::neighbor_list::NeighborList;
 use crate::storage::vector::Iterable;
 use crate::{
+    Real,
     potential::Potential,
     simulation_box::SimulationBox,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions},
     },
-    Real,
 };
 
 #[derive(Debug, Builder)]

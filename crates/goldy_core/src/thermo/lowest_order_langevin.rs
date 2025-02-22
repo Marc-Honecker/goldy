@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use crate::Real;
+use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use nalgebra::SVector;
-use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaChaRng;
+use rand_chacha::rand_core::SeedableRng;
 use rand_distr::{Distribution, StandardNormal};
 
 pub struct LowestOrderLangevin<T>
@@ -45,7 +45,9 @@ where
 
                 let c_vv = T::one() - dt / tau;
                 let c_vf = dt / at.mass();
-                let c_vg = num_traits::Float::sqrt(T::from(2.0).unwrap() * temp * dt / tau);
+                let c_vg = num_traits::Float::sqrt(
+                    T::from(2.0).unwrap() * (T::one() - c_vv * c_vv) * temp / at.mass(),
+                );
                 let c_xv = dt;
 
                 let g = SVector::<T, D>::from_iterator((&self.distr).sample_iter(&mut self.rng));

@@ -1,6 +1,6 @@
 use nalgebra::SVector;
 
-use crate::{storage::vector::Forces, Real};
+use crate::{Real, storage::vector::Forces};
 
 use super::vector::Iterable;
 

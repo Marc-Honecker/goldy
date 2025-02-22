@@ -1,6 +1,6 @@
 use crate::{
-    storage::{atom_type::AtomType, iterator::Iter},
     Real,
+    storage::{atom_type::AtomType, iterator::Iter},
 };
 
 use super::iterator::IterMut;

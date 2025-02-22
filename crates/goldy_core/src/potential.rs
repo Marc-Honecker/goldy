@@ -1,11 +1,11 @@
 use crate::neighbor_list::NeighborList;
 use crate::{
+    Real,
     simulation_box::SimulationBox,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions},
     },
-    Real,
 };
 
 pub mod harmonic_oscillator;

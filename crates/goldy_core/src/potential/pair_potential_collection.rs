@@ -8,7 +8,7 @@ use crate::potential::Potential;
 use crate::simulation_box::SimulationBox;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::{Forces, Iterable, Positions};
-use crate::{potential::pair_potential::PairPotential, storage::atom_type::AtomType, Real};
+use crate::{Real, potential::pair_potential::PairPotential, storage::atom_type::AtomType};
 
 #[derive(Builder, Clone)]
 #[builder(build_fn(validate = "Self::validate"))]

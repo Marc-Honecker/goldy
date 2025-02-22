@@ -10,7 +10,7 @@ fn ideal_gas() {
 
     use goldy_core::{
         force_update::ForceUpdateBuilder,
-        propagator::{velocity_verlet::VelocityVerlet, Propagator},
+        propagator::{Propagator, velocity_verlet::VelocityVerlet},
         simulation_box::BoundaryTypes,
         storage::atom_type::AtomTypeBuilder,
         system::System,
