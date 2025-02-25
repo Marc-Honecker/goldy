@@ -21,7 +21,7 @@ fn bpcl_test() {
     let mass = 1.0;
 
     let period = 2.0 * PI * gamma / 2.0f64.sqrt() * mass;
-    let dt = period / 10.0;
+    let dt = period / 40.0;
     println!("{dt}, {period}, {}", dt / period);
 
     let at = AtomTypeBuilder::default()
@@ -62,6 +62,6 @@ fn bpcl_test() {
     assert_approx_eq!(
         analytical_solution,
         observer.get_mean_kinetic_energy(),
-        1e-2 * analytical_solution
+        1e-4 * analytical_solution
     );
 }

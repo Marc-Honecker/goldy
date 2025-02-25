@@ -1,6 +1,7 @@
 use crate::Real;
 use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use nalgebra::SVector;
+use num_traits::Float;
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use rand_distr::{Distribution, StandardNormal};
@@ -43,12 +44,12 @@ where
             .for_each(|((((x, v), f), at), g_old)| {
                 // compute some "constants"
                 let tau = at.mass() / at.damping();
-                let c_vv = num_traits::Float::exp(-dt / tau);
-                let c_xv = num_traits::Float::sqrt((T::one() - c_vv) * tau * dt);
+
+                let c_vv = Float::exp(-dt / tau);
+                let c_xv = Float::sqrt((T::one() - c_vv) * tau * dt);
                 let c_vf = c_xv / at.mass();
-                let c_vg = num_traits::Float::sqrt(
-                    (T::one() - c_vv) * temp / (T::from(2.0).unwrap() * at.mass()),
-                );
+                let c_vg =
+                    Float::sqrt(temp / at.mass() * (T::one() - c_vv) / T::from(2.0).unwrap());
 
                 // drawing a new random number
                 let g_new =
