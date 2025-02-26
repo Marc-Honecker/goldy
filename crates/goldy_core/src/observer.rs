@@ -44,6 +44,26 @@ impl<T: Real> Observer<T> {
             / T::from_usize(self.kinetic_energies.len()).unwrap()
     }
 
+    pub fn get_second_moment_kinetic_energy(&self) -> T {
+        self.kinetic_energies
+            .iter()
+            .fold(T::zero(), |acc, &ke| acc + ke * ke)
+            / T::from_usize(self.kinetic_energies.len()).unwrap()
+    }
+
+    pub fn get_second_moment_potential_energy(&self) -> Option<T> {
+        if !self.potential_energies.is_empty() {
+            Some(
+                self.potential_energies
+                    .iter()
+                    .fold(T::zero(), |acc, &pe| acc + pe * pe)
+                    / T::from_usize(self.kinetic_energies.len()).unwrap(),
+            )
+        } else {
+            None
+        }
+    }
+
     /// Observes the potential energy.
     pub fn observe_potential_energy<const D: usize>(
         &mut self,
