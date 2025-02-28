@@ -24,8 +24,8 @@ fn kob_andersen() {
     // simulation parameters
     let dt = 5e-3;
     let temp = 0.466;
-    let runs = 200_000;
-    let warm_ups = 100_000;
+    let runs = 2_000;
+    let warm_ups = 1_000;
 
     // creating atomtype A
     let at_a = AtomTypeBuilder::default()
@@ -140,7 +140,7 @@ fn kob_andersen() {
             // measuring the kinetic energy
             observer.observe_kinetic_energy(&system.atoms);
 
-            if i % 1_000 == 0 {
+            if i % 100 == 0 {
                 let vpot_mean = updater
                     .measure_energy(
                         &system.atoms.x,

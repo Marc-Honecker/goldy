@@ -9,6 +9,7 @@ use nalgebra::SVector;
 pub struct NeighborList<T: Real, const D: usize> {
     pub neighbor_lists: Vec<Vec<usize>>,
     old_x: Positions<T, D>,
+    pub neighbor_pos: Vec<Positions<T, D>>,
     skin: T,
     offsets: [usize; D],
     num_bins: [usize; D],
@@ -45,6 +46,7 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         let mut nl = Self {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
+            neighbor_pos: Vec::new(),
             skin: T::from(0.5).unwrap(),
             offsets,
             num_bins,
@@ -59,6 +61,7 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         Self {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
+            neighbor_pos: Vec::new(),
             skin: T::zero(),
             offsets: [0; D],
             num_bins: [0; D],
@@ -86,51 +89,76 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
             if x.len() < 5_000 {
                 self.update_brute_force(x, atom_types, sim_box, ppc);
             } else {
-                let mut new_neighbor_lists = vec![Vec::new(); x.len()];
-
-                // Building the binning list
-                let mut bin_list = vec![Vec::new(); self.num_bins.iter().product()];
-
-                x.iter().enumerate().for_each(|(id, x)| {
-                    let idx = self.get_idx_from_conceptual(self.map_to_conceptual(x, sim_box));
-
-                    bin_list[idx].push((id, *x));
-                });
-
-                // Building the actual neighbor list
-                let neighbor_bin_indices = self.create_neighbor_bin_indices();
-
-                for bin in bin_list.iter() {
-                    for neighbor_bin_idx in neighbor_bin_indices.iter() {
-                        neighbor_bin_idx.iter().for_each(|&idx| {
-                            let neighbor_bin = &bin_list[idx];
-
-                            for (id1, atom1) in bin.iter() {
-                                for (id2, atom2) in neighbor_bin.iter() {
-                                    // Here, I use the constrained that the order of the atoms stays the same at all points in time.
-                                    // Therefore, I can use it as a simple pruning strategy and need only half of the atoms.
-                                    if id1 > id2 {
-                                        let at1 = atom_types.get_by_idx(*id1);
-                                        let at2 = atom_types.get_by_idx(*id2);
-
-                                        let cutoff = ppc.get_cutoff_by_atom_type(at1, at2).expect(
-                                            "Please provide a proper amount of `AtomType`s.",
-                                        );
-
-                                        if sim_box.distance(atom1, atom2) + self.skin < cutoff {
-                                            new_neighbor_lists[*id1].push(*id2);
-                                            new_neighbor_lists[*id2].push(*id1);
-                                        }
-                                    }
-                                }
-                            }
-                        })
-                    }
-                }
-
-                self.neighbor_lists = new_neighbor_lists;
+                self.update_with_bins(x, atom_types, sim_box, ppc);
             }
         }
+
+        self.build_neighbor_pos(x);
+    }
+
+    fn build_neighbor_pos(&mut self, x: &Positions<T, D>) {
+        self.neighbor_pos
+            .iter_mut()
+            .zip(&self.neighbor_lists)
+            .for_each(|(pos, neighbors)| {
+                *pos = Positions::zeros(neighbors.len());
+
+                pos.iter_mut().zip(neighbors).for_each(|(pos, &idx)| {
+                    *pos = *x.get_by_idx(idx);
+                });
+            });
+    }
+
+    fn update_with_bins(
+        &mut self,
+        x: &Positions<T, D>,
+        atom_types: &AtomTypeStore<T>,
+        sim_box: &SimulationBox<T, D>,
+        ppc: &PairPotentialCollection<T>,
+    ) {
+        let mut new_neighbor_lists = vec![Vec::new(); x.len()];
+
+        // Building the binning list
+        let mut bin_list = vec![Vec::new(); self.num_bins.iter().product()];
+
+        x.iter().enumerate().for_each(|(id, x)| {
+            let idx = self.get_idx_from_conceptual(self.map_to_conceptual(x, sim_box));
+
+            bin_list[idx].push((id, *x));
+        });
+
+        // Building the actual neighbor list
+        let neighbor_bin_indices = self.create_neighbor_bin_indices();
+
+        for bin in bin_list.iter() {
+            for neighbor_bin_idx in neighbor_bin_indices.iter() {
+                neighbor_bin_idx.iter().for_each(|&idx| {
+                    let neighbor_bin = &bin_list[idx];
+
+                    for (id1, atom1) in bin.iter() {
+                        for (id2, atom2) in neighbor_bin.iter() {
+                            // Here, I use the constrained that the order of the atoms stays the same at all points in time.
+                            // Therefore, I can use it as a simple pruning strategy and need only half of the atoms.
+                            if id1 > id2 {
+                                let at1 = atom_types.get_by_idx(*id1);
+                                let at2 = atom_types.get_by_idx(*id2);
+
+                                let cutoff = ppc
+                                    .get_cutoff_by_atom_type(at1, at2)
+                                    .expect("Please provide a proper amount of `AtomType`s.");
+
+                                if sim_box.distance(atom1, atom2) + self.skin < cutoff {
+                                    new_neighbor_lists[*id1].push(*id2);
+                                    new_neighbor_lists[*id2].push(*id1);
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        }
+
+        self.neighbor_lists = new_neighbor_lists;
     }
 
     fn update_brute_force(
@@ -197,11 +225,10 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
     #[inline]
     fn update_needed(&self, x: &Positions<T, D>, sim_box: &SimulationBox<T, D>) -> bool {
         self.old_x.len() != x.len()
-            || self
-                .old_x
-                .iter()
-                .zip(x)
-                .any(|(x1, x2)| sim_box.distance(x1, x2) >= T::from(0.5).unwrap() * self.skin)
+            || self.old_x.iter().zip(x).any(|(x1, x2)| {
+                sim_box.sq_distance(x1, x2)
+                    >= num_traits::Float::powi(T::from(0.5).unwrap() * self.skin, 2)
+            })
     }
 
     /// Maps a position to a conceptual bin index.
@@ -321,6 +348,7 @@ mod tests {
         let neighbor_list: NeighborList<f64, 2> = NeighborList {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
+            neighbor_pos: Vec::new(),
             skin: 0.0,
             offsets: [0, 0],
             num_bins: [5, 10],
@@ -335,6 +363,7 @@ mod tests {
         let neighbor_list: NeighborList<f64, 3> = NeighborList {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
+            neighbor_pos: Vec::new(),
             skin: 0.0,
             offsets: [0, 0, 0],
             num_bins: [4, 5, 6],
@@ -356,6 +385,7 @@ mod tests {
         let nl = NeighborList {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
+            neighbor_pos: Vec::new(),
             skin: 0.0,
             offsets: [0, 0, 0],
             num_bins: [10, 10, 10],
