@@ -19,7 +19,6 @@ pub struct PairPotentialCollection<T: Real> {
     pair_potentials: Vec<PairPotential<T>>,
 }
 
-// TODO: use new neighbor list implementation
 impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
     fn measure_energy(
         &self,
