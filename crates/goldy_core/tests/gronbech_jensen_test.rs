@@ -1,4 +1,6 @@
-use assert_approx_eq::assert_approx_eq;
+use std::fs::File;
+use std::io::Write;
+
 use goldy_core::force_update::ForceUpdateBuilder;
 use goldy_core::gronbech_jensen::GronbechJensen;
 use goldy_core::neighbor_list::NeighborList;
@@ -16,39 +18,64 @@ const DIM: usize = 3;
 #[ignore]
 fn gj_test() {
     // simulation parameters
-    let temp = 0.7;
-    let runs = 2_500;
-    let warm_up = 1_500;
+    let temp = 0.67;
+    let mut runs = 5_000;
+    let mut warm_up = 1_000;
     let gamma = 10.0;
     let mass = 1.0;
-    let dt = 0.005;
+    let num_runs = 100;
 
-    let num_runs = 1;
-    let (mut mean_ke, mut mean_ke_sec) = (0.0, 0.0);
-    let (mut mean_pe, mut mean_pe_sec) = (0.0, 0.0);
+    let dts = [
+        0.0174533,
+        0.0138636,
+        0.0110123,
+        0.00874737,
+        0.00694828,
+        0.00551922,
+        0.00438407,
+        0.00348239,
+        0.00276616,
+        0.00219724,
+        0.00174533,
+        0.00138636,
+        0.00110123,
+        0.000874737,
+    ];
 
-    for i in 0..num_runs {
-        let (ke, ke_sec, pe, pe_sec) = run_gj(temp, runs, warm_up, gamma, mass, dt);
-        println!("{i}\t{ke}\t{ke_sec}\t{pe}\t{pe_sec}");
+    // creating the directory, if it does not exist
+    std::fs::create_dir_all("test_outputs").unwrap_or(());
 
-        mean_ke += ke;
-        mean_ke_sec += ke_sec;
+    let mut output_file = File::create("test_outputs/gj.out").unwrap();
+    let header = "runs,warm_up,dt,ke,ke_sec,pe,pe_sec\n";
+    output_file.write(header.as_bytes()).unwrap();
 
-        mean_pe += pe;
-        mean_pe_sec += pe_sec;
+    for dt in dts {
+        let (mut mean_ke, mut mean_ke_sec) = (0.0, 0.0);
+        let (mut mean_pe, mut mean_pe_sec) = (0.0, 0.0);
+
+        for _ in 0..num_runs {
+            let (ke, ke_sec, pe, pe_sec) = run_gj(temp, runs, warm_up, gamma, mass, dt);
+
+            mean_ke += ke;
+            mean_ke_sec += ke_sec;
+
+            mean_pe += pe;
+            mean_pe_sec += pe_sec;
+        }
+
+        mean_ke /= num_runs as f64;
+        mean_ke_sec /= num_runs as f64;
+        mean_pe /= num_runs as f64;
+        mean_pe_sec /= num_runs as f64;
+
+        let content = format!(
+            "{runs},{warm_up},{dt:.5e},{mean_ke:.5e},{mean_ke_sec:.5e},{mean_pe:.5e},{mean_pe_sec:.5e}\n"
+        );
+        output_file.write_all(content.as_bytes()).unwrap();
+
+        runs = runs * 5 / 4;
+        warm_up = warm_up * 5 / 4;
     }
-
-    mean_ke /= num_runs as f64;
-    mean_ke_sec /= num_runs as f64;
-
-    mean_pe /= num_runs as f64;
-    mean_pe_sec /= num_runs as f64;
-
-    println!("\n{mean_ke}\t{mean_ke_sec}\t{mean_pe}\t{mean_pe_sec}");
-
-    // this should hold
-    let analytical_solution = 1.5 * temp;
-    assert_approx_eq!(analytical_solution, mean_ke, 1e-7 * analytical_solution);
 }
 
 fn run_gj(
@@ -67,14 +94,18 @@ fn run_gj(
         .unwrap();
 
     // the atoms
-    let mut system: System<f64, DIM> =
-        System::new_cubic(Vector3::from_element(8), 0.94, BoundaryTypes::Periodic, at);
+    let mut system: System<f64, DIM> = System::new_cubic(
+        Vector3::from_element(9),
+        1.0817,
+        BoundaryTypes::Periodic,
+        at,
+    );
 
     // creating the Lowest-Order Langevin integrator
     let mut gj = GronbechJensen::new(system.number_of_atoms());
 
     // lennard-jones
-    let lj = PairPotential::new_lennard_jones(1.0, 2f64.powf(1.0 / 6.0), 3.5);
+    let lj = PairPotential::new_lennard_jones(1.0, 2f64.powf(1.0 / 6.0), 2.5);
     let potential = PairPotentialCollectionBuilder::default()
         .add_potential(&at, &at, lj)
         .build()
@@ -92,7 +123,7 @@ fn run_gj(
         &potential,
     );
 
-    //
+    // creating observer
     let mut observer = Observer::new();
 
     // the main MD-loop
