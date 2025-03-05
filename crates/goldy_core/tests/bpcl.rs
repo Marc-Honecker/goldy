@@ -16,7 +16,7 @@ const DIM: usize = 3;
 
 #[test]
 #[ignore]
-fn gj_test() {
+fn bpcl_test() {
     // simulation parameters
     let temp = 0.67;
     let mut runs = 5_000;
