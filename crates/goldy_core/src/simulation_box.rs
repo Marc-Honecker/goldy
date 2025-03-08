@@ -1,11 +1,10 @@
-use std::fmt::Display;
-
 use derive_builder::Builder;
 use nalgebra as na;
 use nalgebra::{SMatrix, SVector};
+use std::fmt::Display;
 
 use crate::storage::vector::Iterable;
-use crate::{Real, storage::vector::Positions};
+use crate::{storage::vector::Positions, Real};
 
 #[derive(Debug, Builder, PartialEq, Eq)]
 pub struct SimulationBox<T: Real, const D: usize> {
@@ -67,23 +66,21 @@ impl<T: Real, const D: usize> SimulationBox<T, D> {
     pub fn difference(&self, x1: &SVector<T, D>, x2: &SVector<T, D>) -> SVector<T, D> {
         match self.boundary_type {
             BoundaryTypes::Periodic => {
-                let x1 = self.to_relative(*x1);
-                let x2 = self.to_relative(*x2);
+                // compute "real" distance-vector between the two points
+                let dx = x1 - x2;
 
-                let mut d = x1 - x2;
+                let mut k = self.to_relative(dx);
+                k.apply(|x| {
+                    *x += if *x >= T::zero() {
+                        T::from(0.5).unwrap()
+                    } else {
+                        T::from(0.5).unwrap()
+                    };
 
-                d.iter_mut().for_each(|x| {
-                    // *x -= num_traits::Float::round(*x);
-                    // *x -= num_traits::Float::floor(*x + T::one());
-                    if *x > T::from(0.5).unwrap() {
-                        *x -= T::one();
-                    } else if *x < -T::from(0.5).unwrap() {
-                        *x += T::one();
-                    }
+                    *x = num_traits::Float::floor(*x);
                 });
 
-                d = self.to_real(d);
-                d
+                dx - self.to_real(k)
             }
 
             BoundaryTypes::Open => x1 - x2,
