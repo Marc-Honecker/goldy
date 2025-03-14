@@ -61,6 +61,7 @@ fn argon_lennard_jones() {
         &system.atoms.atom_types,
         &system.sim_box,
         &pair_potential,
+        100,
     );
 
     // thermostat

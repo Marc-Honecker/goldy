@@ -3,13 +3,13 @@ use derive_builder::Builder;
 use crate::neighbor_list::NeighborList;
 use crate::storage::vector::Iterable;
 use crate::{
-    Real,
     potential::Potential,
     simulation_box::SimulationBox,
     storage::{
         atom_type_store::AtomTypeStore,
         vector::{Forces, Positions},
     },
+    Real,
 };
 
 #[derive(Debug, Builder)]
@@ -20,7 +20,7 @@ pub struct HarmonicOscillator<T: Real> {
 
 impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     fn measure_energy(
-        &self,
+        &mut self,
         x: &Positions<T, D>,
         _: &NeighborList<T, D>,
         _: &SimulationBox<T, D>,
@@ -32,7 +32,7 @@ impl<T: Real, const D: usize> Potential<T, D> for HarmonicOscillator<T> {
     }
 
     fn update_forces(
-        &self,
+        &mut self,
         x: &Positions<T, D>,
         _: &NeighborList<T, D>,
         f: &mut Forces<T, D>,
@@ -96,7 +96,7 @@ mod tests {
             .build();
 
         // defining the potential
-        let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
+        let mut potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
 
         // the potential energy
         let mut pot_energy = 0.0;
@@ -158,7 +158,7 @@ mod tests {
             .build();
 
         // defining the potential
-        let potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
+        let mut potential = HarmonicOscillatorBuilder::default().k(1.0).build().unwrap();
 
         // the potential energy
         let mut pot_energy = 0.0;

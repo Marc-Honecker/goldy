@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::Real;
 use crate::potential::pair_potential_collection::PairPotentialCollection;
 use crate::simulation_box::SimulationBox;
@@ -9,8 +11,9 @@ use nalgebra::SVector;
 pub struct NeighborList<T: Real, const D: usize> {
     pub neighbor_lists: Vec<Vec<usize>>,
     old_x: Positions<T, D>,
-    pub neighbor_pos: Vec<Positions<T, D>>,
+    pub neighbor_distances: Vec<Vec<SVector<T, D>>>,
     skin: T,
+    max_num_neighbors: usize,
     offsets: [usize; D],
     num_bins: [usize; D],
 }
@@ -29,6 +32,7 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         atom_types: &AtomTypeStore<T>,
         sim_box: &SimulationBox<T, D>,
         ppc: &PairPotentialCollection<T>,
+        max_num_neighbors: usize,
     ) -> Self {
         let max_cutoff = ppc.get_cutoffs().iter().fold(T::zero(), |acc, &cutoff| {
             num_traits::Float::max(acc, cutoff + T::from(0.75).unwrap())
@@ -46,10 +50,11 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         let mut nl = Self {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
-            neighbor_pos: Vec::new(),
+            neighbor_distances: Vec::new(),
             skin: T::from(0.5).unwrap(),
             offsets,
             num_bins,
+            max_num_neighbors,
         };
 
         nl.update(x, atom_types, sim_box, ppc);
@@ -61,10 +66,11 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         Self {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
-            neighbor_pos: Vec::new(),
+            neighbor_distances: Vec::new(),
             skin: T::zero(),
             offsets: [0; D],
             num_bins: [0; D],
+            max_num_neighbors: 0,
         }
     }
 
@@ -91,22 +97,25 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
             } else {
                 self.update_with_bins(x, atom_types, sim_box, ppc);
             }
+        } else {
+            self.compute_neighbor_distances(x, sim_box);
         }
-
-        self.build_neighbor_pos(x);
     }
 
-    fn build_neighbor_pos(&mut self, x: &Positions<T, D>) {
-        self.neighbor_pos
-            .iter_mut()
-            .zip(&self.neighbor_lists)
-            .for_each(|(pos, neighbors)| {
-                *pos = Positions::zeros(neighbors.len());
+    fn compute_neighbor_distances(&mut self, x: &Positions<T, D>, sim_box: &SimulationBox<T, D>) {
+        self.neighbor_distances = vec![Vec::new(); x.len()];
 
-                pos.iter_mut().zip(neighbors).for_each(|(pos, &idx)| {
-                    *pos = *x.get_by_idx(idx);
-                });
-            });
+        for id in 0..self.neighbor_lists.len() {
+            let curr_pos = x.get_by_idx(id);
+
+            for &neighbor_id in self.neighbor_lists[id].iter() {
+                let neighbor = x.get_by_idx(neighbor_id);
+
+                let distance = sim_box.difference(curr_pos, neighbor);
+
+                self.neighbor_distances[id].push(distance);
+            }
+        }
     }
 
     fn update_with_bins(
@@ -169,7 +178,8 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
         ppc: &PairPotentialCollection<T>,
     ) {
         self.old_x = x.clone();
-        let mut new_neighbor_lists = vec![Vec::new(); x.len()];
+        self.neighbor_lists = vec![Vec::new(); x.len()];
+        self.neighbor_distances = vec![Vec::new(); x.len()];
 
         for (id1, atom1) in x.iter().enumerate() {
             for (id2, atom2) in x.iter().enumerate() {
@@ -183,15 +193,17 @@ impl<T: Real, const D: usize> NeighborList<T, D> {
                         .get_cutoff_by_atom_type(at1, at2)
                         .expect("Please provide a proper amount of `AtomType`s.");
 
-                    if sim_box.distance(atom1, atom2) < cutoff + self.skin {
-                        // remember to use only one ID.
-                        new_neighbor_lists[id1].push(id2);
+                    let delta = sim_box.difference(atom1, atom2);
+                    if delta.norm_squared() < num_traits::Float::powi(cutoff + self.skin, 2) {
+                        self.neighbor_lists[id1].push(id2);
+                        self.neighbor_lists[id2].push(id1);
+
+                        self.neighbor_distances[id1].push(delta);
+                        self.neighbor_distances[id2].push(-delta);
                     }
                 }
             }
         }
-
-        self.neighbor_lists = new_neighbor_lists;
     }
 
     /// Creates indices for neighboring bins.
@@ -336,6 +348,20 @@ fn generate_conceptual_indices_rec<const D: usize>(
     }
 }
 
+#[inline]
+fn get_bin_indeces<T: Real, const D: usize>(
+    x: &SVector<T, D>,
+    bin_size: &SVector<T, D>,
+) -> SVector<usize, D> {
+    let bin_indeces = x.component_div(bin_size);
+    let bin_indeces = bin_indeces.map(|x| {
+        let x = num_traits::Float::floor(x);
+        T::to_usize(&x).unwrap()
+    });
+
+    bin_indeces
+}
+
 #[cfg(test)]
 mod tests {
     use crate::neighbor_list::{NeighborList, generate_conceptual_indices};
@@ -348,10 +374,11 @@ mod tests {
         let neighbor_list: NeighborList<f64, 2> = NeighborList {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
-            neighbor_pos: Vec::new(),
+            neighbor_distances: Vec::new(),
             skin: 0.0,
             offsets: [0, 0],
             num_bins: [5, 10],
+            max_num_neighbors: 0,
         };
 
         assert_eq!(neighbor_list.get_idx_from_conceptual([0, 0]), 0);
@@ -363,10 +390,11 @@ mod tests {
         let neighbor_list: NeighborList<f64, 3> = NeighborList {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
-            neighbor_pos: Vec::new(),
+            neighbor_distances: Vec::new(),
             skin: 0.0,
             offsets: [0, 0, 0],
             num_bins: [4, 5, 6],
+            max_num_neighbors: 0,
         };
 
         assert_eq!(neighbor_list.get_idx_from_conceptual([0, 0, 0]), 0);
@@ -385,10 +413,11 @@ mod tests {
         let nl = NeighborList {
             neighbor_lists: Vec::new(),
             old_x: Positions::zeros(0),
-            neighbor_pos: Vec::new(),
+            neighbor_distances: Vec::new(),
             skin: 0.0,
             offsets: [0, 0, 0],
             num_bins: [10, 10, 10],
+            max_num_neighbors: 0,
         };
 
         assert_eq!(

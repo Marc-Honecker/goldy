@@ -121,6 +121,7 @@ fn run_gj(
         &system.atoms.atom_types,
         &system.sim_box,
         &potential,
+        100,
     );
 
     // creating observer
@@ -151,7 +152,7 @@ fn run_gj(
             // measuring the kinetic energy
             observer.observe_kinetic_energy(&system.atoms);
 
-            observer.observe_potential_energy(&system, &updater, &neighbor_list);
+            observer.observe_potential_energy(&system, &mut updater, &neighbor_list);
         }
     }
 

@@ -1,14 +1,12 @@
 use std::vec;
 
-use derive_builder::Builder;
-use nalgebra::SVector;
-
 use crate::neighbor_list::NeighborList;
 use crate::potential::Potential;
 use crate::simulation_box::SimulationBox;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::{Forces, Iterable, Positions};
 use crate::{Real, potential::pair_potential::PairPotential, storage::atom_type::AtomType};
+use derive_builder::Builder;
 
 #[derive(Builder, Clone)]
 #[builder(build_fn(validate = "Self::validate"))]
@@ -17,79 +15,52 @@ pub struct PairPotentialCollection<T: Real> {
     atom_type_ids: Vec<(usize, usize)>,
     #[builder(setter(custom))]
     pair_potentials: Vec<PairPotential<T>>,
+    #[builder(setter(skip), default = "T::zero()")]
+    potential_energy: T,
 }
 
 impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
     fn measure_energy(
-        &self,
-        x: &Positions<T, D>,
-        neighbor_list: &NeighborList<T, D>,
-        sim_box: &SimulationBox<T, D>,
-        atom_types: &AtomTypeStore<T>,
+        &mut self,
+        _x: &Positions<T, D>,
+        _neighbor_list: &NeighborList<T, D>,
+        _sim_box: &SimulationBox<T, D>,
+        _atom_types: &AtomTypeStore<T>,
     ) -> T {
-        // Iterating over all given atom-types, positions and the neighbor-list.
-        atom_types
-            .iter()
-            .zip(x)
-            .zip(&neighbor_list.neighbor_lists)
-            .fold(
-                // Initializing the accumulator to zero.
-                T::zero(),
-                |acc, ((curr_atom_type, curr_pos), neighbors)| {
-                    // computing the energies of the curr_pos/neighbor pairs and updating the energy
-                    acc + neighbors.iter().fold(T::zero(), |acc, &neighbor_idx| {
-                        // retrieving the neighbor position
-                        let neighbor_pos = x.get_by_idx(neighbor_idx);
-                        // retrieving the neighbor type
-                        let neighbor_type = atom_types.get_by_idx(neighbor_idx);
-
-                        // evaluating the potential energy
-                        let curr_energy = self
-                            .get_pair_potential(curr_atom_type, neighbor_type)
-                            .expect("Please provide a proper amount of `AtomType`s.")
-                            .energy(sim_box.sq_distance(curr_pos, neighbor_pos));
-
-                        acc + curr_energy
-                    })
-                },
-            )
+        self.potential_energy / T::from(2.0).unwrap()
     }
 
     fn update_forces(
-        &self,
-        x: &Positions<T, D>,
+        &mut self,
+        _x: &Positions<T, D>,
         neighbor_list: &NeighborList<T, D>,
         f: &mut Forces<T, D>,
-        sim_box: &SimulationBox<T, D>,
+        _sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) {
-        let mut pseudo_forces = vec![SVector::zeros(); x.len()];
+        // zero the new potential energy
+        self.potential_energy = T::zero();
 
-        for (id, neighbors) in neighbor_list.neighbor_lists.iter().enumerate() {
-            let curr_pos = x.get_by_idx(id);
+        for (id, (f, distances)) in f
+            .iter_mut()
+            .zip(&neighbor_list.neighbor_distances)
+            .enumerate()
+        {
             let curr_type = atom_types.get_by_idx(id);
 
-            for &neighbor_id in neighbors {
-                let neighbor_pos = x.get_by_idx(neighbor_id);
+            for (neighbor_id, dist) in distances.iter().enumerate() {
                 let neighbor_type = atom_types.get_by_idx(neighbor_id);
-
-                // evaluating the pseudo-force
-                let pseudo_force = self
+                let pair_potential = self
                     .get_pair_potential(curr_type, neighbor_type)
-                    .expect("Please provide a proper amount of `AtomType`s.")
-                    .pseudo_force(sim_box.sq_distance(curr_pos, neighbor_pos));
-                let pseudo_force_vector = sim_box.difference(curr_pos, neighbor_pos) * pseudo_force;
+                    .expect("Please provide a proper amount of `AtomType`s.");
 
-                pseudo_forces[id] += pseudo_force_vector;
-                pseudo_forces[neighbor_id] -= pseudo_force_vector;
+                let n_sq = dist.norm_squared();
+
+                *f -= dist * pair_potential.pseudo_force(n_sq);
+
+                self.potential_energy += pair_potential.energy(n_sq);
             }
         }
-
-        f.iter_mut()
-            .zip(pseudo_forces)
-            .for_each(|(f, pseudo_force)| {
-                *f -= pseudo_force;
-            });
     }
 }
 

@@ -2,8 +2,8 @@ use crate::neighbor_list::NeighborList;
 use crate::storage::atom_type_store::AtomTypeStore;
 use crate::storage::vector::Positions;
 use crate::{
-    Real, potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore,
-    thermo::Thermostat,
+    potential::Potential, simulation_box::SimulationBox, storage::atom_store::AtomStore, thermo::Thermostat,
+    Real,
 };
 
 #[derive(Default)]
@@ -43,7 +43,7 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
         }
 
         // And now the potential.
-        if let Some(potential) = &self.potential {
+        if let Some(potential) = &mut self.potential {
             potential.update_forces(
                 &atom_store.x,
                 neighbor_list,
@@ -55,14 +55,14 @@ impl<T: Real, const D: usize> ForceUpdate<T, D> {
     }
 
     pub fn measure_energy(
-        &self,
+        &mut self,
         x: &Positions<T, D>,
         neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,
         atom_types: &AtomTypeStore<T>,
     ) -> Option<T> {
         self.potential
-            .as_ref()
+            .as_mut()
             .map(|potential| potential.measure_energy(x, neighbor_list, sim_box, atom_types))
     }
 }

@@ -1,11 +1,11 @@
 use nalgebra::SVector;
 
-use crate::Real;
 use crate::force_update::ForceUpdate;
 use crate::neighbor_list::NeighborList;
 use crate::storage::atom_store::AtomStore;
 use crate::storage::vector::Iterable;
 use crate::system::System;
+use crate::Real;
 
 /// This struct handles all observations.
 #[derive(Default)]
@@ -68,7 +68,7 @@ impl<T: Real> Observer<T> {
     pub fn observe_potential_energy<const D: usize>(
         &mut self,
         system: &System<T, D>,
-        updater: &ForceUpdate<T, D>,
+        updater: &mut ForceUpdate<T, D>,
         neighbor_list: &NeighborList<T, D>,
     ) {
         if let Some(pot) = updater.measure_energy(

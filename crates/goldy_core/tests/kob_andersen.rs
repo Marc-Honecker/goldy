@@ -101,6 +101,7 @@ fn kob_andersen() {
         &system.atoms.atom_types,
         &system.sim_box,
         &pair_potential,
+        100,
     );
 
     // thermostat
