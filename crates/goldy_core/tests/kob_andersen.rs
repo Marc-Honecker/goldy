@@ -85,6 +85,9 @@ fn kob_andersen() {
         at_a,
     );
 
+    // creating propagator
+    let mut lfv = LeapfrogVerlet::new();
+
     // and than changing 20% to B
     let mut rng = rand::rng();
     system.atoms.atom_types.iter_mut().for_each(|at| {
@@ -121,7 +124,7 @@ fn kob_andersen() {
     // the main MD-loop
     for i in 0..runs {
         // propagating the system in time
-        LeapfrogVerlet::integrate(
+        lfv.integrate(
             &mut system.atoms,
             &neighbor_list,
             &system.sim_box,

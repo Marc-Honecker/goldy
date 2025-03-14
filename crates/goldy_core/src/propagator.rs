@@ -10,6 +10,7 @@ pub trait Propagator {
     /// Propagates a system in time and returns the accumulated potential-energy,
     /// if the potential is given.
     fn integrate<T: Real, const D: usize>(
+        &mut self,
         atom_store: &mut AtomStore<T, D>,
         neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,

@@ -38,8 +38,10 @@ fn harmonic_oscillator() {
 
     let mut observer = Observer::default();
 
+    let mut lfv = LeapfrogVerlet::new();
+
     for i in 0..runs {
-        LeapfrogVerlet::integrate(
+        lfv.integrate(
             &mut system.atoms,
             &NeighborList::new_empty(),
             &system.sim_box,

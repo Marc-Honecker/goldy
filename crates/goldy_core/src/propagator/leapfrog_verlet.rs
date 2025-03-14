@@ -2,11 +2,18 @@ use crate::neighbor_list::NeighborList;
 use crate::storage::vector::Iterable;
 use crate::{Real, force_update::ForceUpdate, propagator::Propagator};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct LeapfrogVerlet;
+
+impl LeapfrogVerlet {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
 
 impl Propagator for LeapfrogVerlet {
     fn integrate<T: Real, const D: usize>(
+        &mut self,
         atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
         neighbor_list: &NeighborList<T, D>,
         sim_box: &crate::simulation_box::SimulationBox<T, D>,
@@ -85,7 +92,8 @@ mod tests {
             .unwrap();
 
         // propagating one step in time
-        LeapfrogVerlet::integrate::<f32, 3>(
+        let mut lfv = LeapfrogVerlet::new();
+        lfv.integrate(
             &mut atom_store,
             &NeighborList::new_empty(),
             &sim_box,

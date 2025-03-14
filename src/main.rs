@@ -43,6 +43,9 @@ fn main() {
         .potential(Box::new(potential))
         .build();
 
+    // creating propagator
+    let mut velvet = VelocityVerlet::new();
+
     // the potential energy
     let mut pot_energy = 0.0;
     // the kinetic energy
@@ -51,7 +54,7 @@ fn main() {
     // the main MD-loop
     for i in 0..runs {
         // stepping forward in time
-        VelocityVerlet::integrate(
+        velvet.integrate(
             &mut system.atoms,
             &NeighborList::new_empty(),
             &system.sim_box,

@@ -5,10 +5,18 @@ use crate::{
     storage::atom_store::AtomStore,
 };
 
+#[derive(Debug, Clone, Copy, Default)]
 pub struct VelocityVerlet;
+
+impl VelocityVerlet {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
 
 impl Propagator for VelocityVerlet {
     fn integrate<T: Real, const D: usize>(
+        &mut self,
         atom_store: &mut AtomStore<T, D>,
         neighbor_list: &NeighborList<T, D>,
         sim_box: &SimulationBox<T, D>,

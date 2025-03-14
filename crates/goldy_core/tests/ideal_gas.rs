@@ -46,10 +46,13 @@ fn ideal_gas() {
     // kinetic energy moments
     let mut tkin_1 = 0.0;
 
+    // propagator
+    let mut velvet = VelocityVerlet::new();
+
     // the main MD-loop
     for i in 0..runs {
         // propagating the system in time
-        VelocityVerlet::integrate(
+        velvet.integrate(
             &mut system.atoms,
             &NeighborList::new_empty(),
             &system.sim_box,

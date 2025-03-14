@@ -75,6 +75,9 @@ fn argon_lennard_jones() {
         .potential(Box::new(pair_potential.clone()))
         .build();
 
+    // creating propagator
+    let mut velvet = VelocityVerlet::new();
+
     // kinetic energy moments
     let (mut vpot_1, mut num_updates) = (0.0, 0);
 
@@ -83,7 +86,7 @@ fn argon_lennard_jones() {
     // the main MD-loop
     for i in 0..runs {
         // propagating the system in time
-        VelocityVerlet::integrate(
+        velvet.integrate(
             &mut system.atoms,
             &neighbor_list,
             &system.sim_box,
