@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[allow(unused)]
-pub struct Simulation<T: Real, const D: usize, P: Propagator> {
+pub struct Simulation<T: Real, const D: usize, P: Propagator<T, D>> {
     atoms: AtomStore<T, D>,
     simulation_box: SimulationBox<T, D>,
     force_updater: ForceUpdate<T, D>,

@@ -6,10 +6,11 @@ use goldy_core::neighbor_list::NeighborList;
 use goldy_core::observer::Observer;
 use goldy_core::potential::pair_potential::PairPotential;
 use goldy_core::potential::pair_potential_collection::PairPotentialCollectionBuilder;
+use goldy_core::propagator::Propagator;
+use goldy_core::propagator::lowest_order_langevin::LowestOrderLangevin;
 use goldy_core::simulation_box::BoundaryTypes;
 use goldy_core::storage::atom_type::AtomTypeBuilder;
 use goldy_core::system::System;
-use goldy_core::thermo::lowest_order_langevin::LowestOrderLangevin;
 use nalgebra::Vector3;
 
 const DIM: usize = 3;
@@ -23,7 +24,7 @@ fn lol_test() {
     let mut warm_up = 1_000;
     let gamma = 10.0;
     let mass = 1.0;
-    let num_runs = 100;
+    let num_runs = 1;
 
     let dts = [
         0.012356,
@@ -102,7 +103,7 @@ fn run_gj(
     );
 
     // creating the Lowest-Order Langevin integrator
-    let mut gj = LowestOrderLangevin::new();
+    let mut lol = LowestOrderLangevin::new();
 
     // lennard-jones
     let lj = PairPotential::new_lennard_jones(1.0, 2f64.powf(1.0 / 6.0), 2.5);
@@ -129,13 +130,14 @@ fn run_gj(
 
     // the main MD-loop
     for i in 0..runs {
-        // setting the forces to zero
-        system.atoms.f.set_to_zero();
-
-        updater.update_forces(&mut system.atoms, &neighbor_list, &system.sim_box, temp, dt);
-
-        // propagating the system in time
-        gj.propagate(&mut system.atoms, dt, temp);
+        lol.integrate(
+            &mut system.atoms,
+            &neighbor_list,
+            &system.sim_box,
+            &mut updater,
+            dt,
+            temp,
+        );
 
         system
             .sim_box

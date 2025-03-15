@@ -14,8 +14,8 @@ impl VelocityVerlet {
     }
 }
 
-impl Propagator for VelocityVerlet {
-    fn integrate<T: Real, const D: usize>(
+impl<T: Real, const D: usize> Propagator<T, D> for VelocityVerlet {
+    fn integrate(
         &mut self,
         atom_store: &mut AtomStore<T, D>,
         neighbor_list: &NeighborList<T, D>,

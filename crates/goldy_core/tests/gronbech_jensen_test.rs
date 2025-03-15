@@ -2,11 +2,12 @@ use std::fs::File;
 use std::io::Write;
 
 use goldy_core::force_update::ForceUpdateBuilder;
-use goldy_core::gronbech_jensen::GronbechJensen;
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::observer::Observer;
 use goldy_core::potential::pair_potential::PairPotential;
 use goldy_core::potential::pair_potential_collection::PairPotentialCollectionBuilder;
+use goldy_core::propagator::Propagator;
+use goldy_core::propagator::gronbech_jensen::GronbechJensen;
 use goldy_core::simulation_box::BoundaryTypes;
 use goldy_core::storage::atom_type::AtomTypeBuilder;
 use goldy_core::system::System;
@@ -27,7 +28,7 @@ fn gj_test() {
 
     let dts = [
         0.0174533,
-        //0.0138636,
+        0.0138636,
         //0.0110123,
         //0.00874737,
         //0.00694828,
@@ -45,7 +46,7 @@ fn gj_test() {
     // creating the directory, if it does not exist
     std::fs::create_dir_all("test_outputs").unwrap_or(());
 
-    let mut output_file = File::create("test_outputs/gj.out").unwrap();
+    let mut output_file = File::create("test_outputs/gj.csv").unwrap();
     let header = "runs,warm_up,dt,ke,ke_sec,pe,pe_sec\n";
     output_file.write(header.as_bytes()).unwrap();
 
@@ -129,13 +130,14 @@ fn run_gj(
 
     // the main MD-loop
     for i in 0..runs {
-        // setting the forces to zero
-        system.atoms.f.set_to_zero();
-
-        updater.update_forces(&mut system.atoms, &neighbor_list, &system.sim_box, temp, dt);
-
-        // propagating the system in time
-        gj.propagate(&mut system.atoms, dt, temp);
+        gj.integrate(
+            &mut system.atoms,
+            &neighbor_list,
+            &system.sim_box,
+            &mut updater,
+            dt,
+            temp,
+        );
 
         system
             .sim_box

@@ -5,7 +5,6 @@ use error::GoldyError;
 
 pub mod error;
 pub mod force_update;
-pub mod gronbech_jensen;
 pub mod neighbor_list;
 pub mod observer;
 pub mod potential;

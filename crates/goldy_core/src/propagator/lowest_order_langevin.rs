@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::Real;
+use crate::propagator::Propagator;
 use crate::storage::{atom_store::AtomStore, vector::Iterable};
 use nalgebra::SVector;
 use num_traits::Float;
@@ -33,8 +34,29 @@ where
             phantom_data: PhantomData,
         }
     }
+}
 
-    pub fn propagate<const D: usize>(&mut self, atom_store: &mut AtomStore<T, D>, dt: T, temp: T) {
+impl<T, const D: usize> Propagator<T, D> for LowestOrderLangevin<T>
+where
+    T: Real,
+    StandardNormal: Distribution<T>,
+{
+    fn integrate(
+        &mut self,
+        atom_store: &mut AtomStore<T, D>,
+        neighbor_list: &crate::neighbor_list::NeighborList<T, D>,
+        sim_box: &crate::simulation_box::SimulationBox<T, D>,
+        updater: &mut crate::force_update::ForceUpdate<T, D>,
+        dt: T,
+        temp: T,
+    ) {
+        // setting the forces to zero
+        atom_store.f.set_to_zero();
+
+        // updating the forces with the potential
+        updater.update_forces(atom_store, neighbor_list, sim_box, temp, dt);
+
+        // propagating in time and applying thermostatting
         atom_store
             .x
             .iter_mut()

@@ -11,8 +11,8 @@ impl LeapfrogVerlet {
     }
 }
 
-impl Propagator for LeapfrogVerlet {
-    fn integrate<T: Real, const D: usize>(
+impl<T: Real, const D: usize> Propagator<T, D> for LeapfrogVerlet {
+    fn integrate(
         &mut self,
         atom_store: &mut crate::storage::atom_store::AtomStore<T, D>,
         neighbor_list: &NeighborList<T, D>,
