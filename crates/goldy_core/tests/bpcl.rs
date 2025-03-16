@@ -24,7 +24,7 @@ fn bpcl_test() {
     let mut warm_up = 1_000;
     let gamma = 10.0;
     let mass = 1.0;
-    let num_runs = 1;
+    let num_runs = 64;
 
     let dts = [
         0.0155553,
