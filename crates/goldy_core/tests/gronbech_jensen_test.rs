@@ -20,11 +20,11 @@ const DIM: usize = 3;
 fn gj_test() {
     // simulation parameters
     let temp = 0.67;
-    let mut runs = 6_000;
-    let mut warm_up = 5_000;
+    let mut runs = 10_000;
+    let mut warm_up = 9_000;
     let gamma = 10.0;
     let mass = 1.0;
-    let num_runs = 64;
+    let num_runs = 50;
 
     let dts = [
         0.0174533,
@@ -74,8 +74,8 @@ fn gj_test() {
         );
         output_file.write_all(content.as_bytes()).unwrap();
 
-        runs = runs * 5 / 4;
-        warm_up = warm_up * 5 / 4;
+        runs = runs * 5 / 4 + 500;
+        warm_up = runs - 1_000;
     }
 }
 
