@@ -21,7 +21,7 @@ fn bpcl_test() {
     // simulation parameters
     let temp = 0.67;
     let mut runs = 10_000;
-    let mut warm_up = 1_000;
+    let mut warm_up = 9_000;
     let gamma = 10.0;
     let mass = 1.0;
     let num_runs = 50;
