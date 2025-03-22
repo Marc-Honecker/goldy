@@ -41,14 +41,15 @@ impl<T: Real, const D: usize> Potential<T, D> for PairPotentialCollection<T> {
         // zero the new potential energy
         self.potential_energy = T::zero();
 
-        for (id, (f, distances)) in f
+        for (id, ((f, distances), neighbor_ids)) in f
             .iter_mut()
             .zip(&neighbor_list.neighbor_distances)
+            .zip(&neighbor_list.neighbor_lists)
             .enumerate()
         {
             let curr_type = atom_types.get_by_idx(id);
 
-            for (neighbor_id, dist) in distances.iter().enumerate() {
+            for (dist, &neighbor_id) in distances.iter().zip(neighbor_ids) {
                 let neighbor_type = atom_types.get_by_idx(neighbor_id);
                 let pair_potential = self
                     .get_pair_potential(curr_type, neighbor_type)
