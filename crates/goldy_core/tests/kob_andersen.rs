@@ -1,6 +1,7 @@
 use goldy_core::neighbor_list::NeighborList;
 use goldy_core::observer::Observer;
 use goldy_core::propagator::leapfrog_verlet::LeapfrogVerlet;
+use goldy_core::rdf::RDF;
 use goldy_core::thermo::langevin::Langevin;
 use nalgebra::Vector3;
 use rand::Rng;
@@ -24,8 +25,8 @@ fn kob_andersen() {
     // simulation parameters
     let dt = 5e-3;
     let temp = 0.466;
-    let runs = 2_000;
-    let warm_ups = 1_000;
+    let runs = 5_000;
+    let warm_ups = 4_000;
 
     // creating atomtype A
     let at_a = AtomTypeBuilder::default()
@@ -52,17 +53,17 @@ fn kob_andersen() {
 
     let lj_aa = PairPotential::new_lennard_jones(
         epsilon_aa,
-        sigma_aa * 2f32.powf(1.0 / 6.0),
+        sigma_aa * 2f64.powf(1.0 / 6.0),
         2.5 * sigma_aa,
     );
     let lj_ab = PairPotential::new_lennard_jones(
         epsilon_ab,
-        sigma_ab * 2f32.powf(1.0 / 6.0),
+        sigma_ab * 2f64.powf(1.0 / 6.0),
         2.5 * sigma_ab,
     );
     let lj_bb = PairPotential::new_lennard_jones(
         epsilon_bb,
-        sigma_bb * 2f32.powf(1.0 / 6.0),
+        sigma_bb * 2f64.powf(1.0 / 6.0),
         2.5 * sigma_bb,
     );
 
@@ -95,6 +96,9 @@ fn kob_andersen() {
             *at = at_b;
         }
     });
+
+    let mut rdf_aa = RDF::new(&at_a, &system.atoms, 500, &pair_potential, 50, 4.5);
+    let mut rdf_bb = RDF::new(&at_b, &system.atoms, 500, &pair_potential, 50, 4.5);
 
     system.write_system_to_file("test_outputs/kob_andersen0.out");
 
@@ -144,6 +148,9 @@ fn kob_andersen() {
             // measuring the kinetic energy
             observer.observe_kinetic_energy(&system.atoms);
 
+            rdf_aa.measure(&system.atoms, &neighbor_list, &system.sim_box);
+            rdf_bb.measure(&system.atoms, &neighbor_list, &system.sim_box);
+
             if i % 100 == 0 {
                 let vpot_mean = updater
                     .measure_energy(
@@ -157,7 +164,7 @@ fn kob_andersen() {
                 vpot_1 += vpot_mean;
                 num_updates += 1;
 
-                println!("{i}, {}", vpot_mean / system.number_of_atoms() as f32);
+                println!("{i}, {}", vpot_mean / system.number_of_atoms() as f64);
             }
         }
 
@@ -172,9 +179,12 @@ fn kob_andersen() {
 
     system.write_system_to_file(format!("test_outputs/kob_andersen{runs}.out").as_str());
 
-    vpot_1 /= (num_updates * system.number_of_atoms()) as f32;
+    vpot_1 /= (num_updates * system.number_of_atoms()) as f64;
 
     println!("{vpot_1}");
+
+    rdf_aa.write("test_outputs/rdf_aa.csv");
+    rdf_bb.write("test_outputs/rdf_bb.csv");
 
     // this should hold
     let analytical_solution = 1.5 * temp;

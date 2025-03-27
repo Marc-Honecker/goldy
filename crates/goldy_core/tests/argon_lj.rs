@@ -24,20 +24,20 @@ fn argon_lennard_jones() {
     // simulation parameters
     let dt = 1e-3;
     let temp = 0.7;
-    let runs = 40_000;
-    let warm_ups = 20_000;
-    let cutoff = 7.85723;
+    let runs = 3_000;
+    let warm_ups = 2_000;
 
     // Argon
     let at = AtomTypeBuilder::default()
         .id(1)
         .damping(1e-2)
-        .mass(39.95)
+        .mass(1.0)
         .build()
         .unwrap();
 
-    let u0 = 120.0;
-    let r0 = 3.92862;
+    let u0 = 1.0;
+    let r0 = 1.0 * 2f64.powf(1.0 / 6.0);
+    let cutoff = 2.5;
 
     let lj = PairPotential::new_lennard_jones(u0, r0, cutoff);
 
@@ -51,8 +51,7 @@ fn argon_lennard_jones() {
         .unwrap();
 
     // the atoms
-    let mut system = System::new_cubic(Vector3::new(12, 12, 12), 4.0, BoundaryTypes::Periodic, at);
-
+    let mut system = System::new_cubic(Vector3::new(9, 9, 9), 1.0817, BoundaryTypes::Periodic, at);
     system.write_system_to_file("test_outputs/argon_0.out");
 
     // the neighbor-list
@@ -67,7 +66,7 @@ fn argon_lennard_jones() {
     // thermostat
     let langevin = Langevin::new();
 
-    let mut rdf = RDF::new(&at, &system.atoms, 1000, &pair_potential, 50.0);
+    let mut rdf = RDF::new(&at, &system.atoms, 500, &pair_potential, 50, 4.5);
 
     // creating the updater
     let mut updater = ForceUpdateBuilder::default()
@@ -106,9 +105,7 @@ fn argon_lennard_jones() {
             // measuring the kinetic energy
             observer.observe_kinetic_energy(&system.atoms);
 
-            if i % 100 == 0 {
-                rdf.measure(&system.atoms, &neighbor_list, &system.sim_box);
-            }
+            rdf.measure(&system.atoms, &neighbor_list, &system.sim_box);
 
             if i % 1_000 == 0 {
                 let vpot_mean = updater
@@ -123,7 +120,7 @@ fn argon_lennard_jones() {
                 vpot_1 += vpot_mean;
                 num_updates += 1;
 
-                println!("{i}, {}", vpot_mean / system.number_of_atoms() as f32);
+                println!("{i}, {}", vpot_mean / system.number_of_atoms() as f64);
             }
         }
 
@@ -140,7 +137,7 @@ fn argon_lennard_jones() {
 
     rdf.write("test_outputs/rdf.out");
 
-    vpot_1 /= (num_updates * system.number_of_atoms()) as f32;
+    vpot_1 /= (num_updates * system.number_of_atoms()) as f64;
 
     println!("{vpot_1}");
 

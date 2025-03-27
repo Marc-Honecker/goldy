@@ -1,3 +1,9 @@
+use nalgebra::SVector;
+use rand::SeedableRng;
+use rand_chacha::ChaChaRng;
+use rand_distr::uniform::SampleUniform;
+use rand_distr::{Distribution, Uniform};
+
 use crate::Real;
 use crate::neighbor_list::NeighborList;
 use crate::potential::pair_potential_collection::PairPotentialCollection;
@@ -8,25 +14,34 @@ use crate::storage::vector::Iterable;
 use std::io::Write;
 
 /// Implements the radial distribution function.
-pub struct RDF<T: Real> {
+pub struct RDF<T>
+where
+    T: Real + SampleUniform,
+{
     atom_type: AtomType<T>,
     rdf: Vec<T>,
     rdf_counter: Vec<T>,
-    // num_random_atoms: usize,
+    num_random_atoms: usize,
     num_intervals: usize,
     cutoff: T,
     r_max: T,
     dr: T,
     pre_fac: T,
-    // rng: ChaChaRng,
+    rng: ChaChaRng,
+    int_distr: Uniform<usize>,
+    float_distr: Uniform<T>,
 }
 
-impl<T: Real> RDF<T> {
+impl<T> RDF<T>
+where
+    T: Real + SampleUniform,
+{
     pub fn new(
         atom_type: &AtomType<T>,
         atoms: &AtomStore<T, 3>,
         num_intervals: usize,
         ppc: &PairPotentialCollection<T>,
+        num_random_atoms: usize,
         r_max: T,
     ) -> Self {
         let num_atoms = atoms.get_number_of_atoms(atom_type);
@@ -39,11 +54,15 @@ impl<T: Real> RDF<T> {
             atom_type: *atom_type,
             rdf: vec![T::zero(); num_intervals],
             rdf_counter: vec![T::zero(); num_intervals],
+            num_random_atoms,
             num_intervals,
             cutoff: ppc.get_cutoff_by_atom_type(atom_type, atom_type).unwrap(),
             r_max,
             dr: r_max / T::from_usize(num_intervals).unwrap(),
             pre_fac,
+            rng: ChaChaRng::from_os_rng(),
+            int_distr: Uniform::new(0, num_atoms).unwrap(),
+            float_distr: Uniform::new(T::from(-0.5).unwrap(), T::from(0.5).unwrap()).unwrap(),
         }
     }
 
@@ -99,22 +118,64 @@ impl<T: Real> RDF<T> {
 
             old_volume = new_volume;
         }
+
+        let non_local_weight = T::from(0.01).unwrap();
+        for id in 0..atoms.number_of_atoms() {
+            let curr_pos = atoms.x.get_by_idx(id);
+
+            for _ in 0..self.num_random_atoms {
+                // draw random atom
+                let random_id = (&self.int_distr).sample(&mut self.rng);
+
+                if random_id == id || *atoms.atom_types.get_by_idx(random_id) != self.atom_type {
+                    continue;
+                }
+
+                let neighbor_pos = atoms.x.get_by_idx(random_id);
+                let dist = simulation_box.distance(curr_pos, neighbor_pos);
+
+                if dist < self.r_max {
+                    // computing the index of our rdf
+                    let update_idx = T::from(self.num_intervals).unwrap() * dist / self.r_max;
+                    // updating the rdf
+                    self.rdf[update_idx.to_usize().unwrap()] += non_local_weight;
+                }
+
+                // draw reference atom from ideal-gas distribution
+                let rand_atom =
+                    SVector::<T, 3>::from_iterator((&self.float_distr).sample_iter(&mut self.rng));
+                let rand_atom = simulation_box.to_real(rand_atom);
+                let dist = rand_atom.norm();
+
+                if dist < self.r_max {
+                    // computing the index of our rdf
+                    let update_idx = T::from(self.num_intervals).unwrap() * dist / self.r_max;
+                    // updating the rdf
+                    self.rdf_counter[update_idx.to_usize().unwrap()] += non_local_weight;
+                }
+            }
+        }
     }
 
     pub fn write(&self, filename: &str) {
         let mut file = std::fs::File::create(filename).expect("Unable to create file");
 
         let mut contents = String::new();
+
         for i in 0..self.num_intervals {
-            if self.rdf_counter[i] > T::zero() {
-                let line = format!(
-                    "{:.5}\t{:.5}\t{:.5}\n",
-                    (T::from(i).unwrap() + T::from(0.5).unwrap()) * self.dr,
-                    self.rdf[i] / self.rdf_counter[i],
-                    self.rdf_counter[i]
-                );
-                contents.push_str(&line);
-            }
+            let normed_rdf = if (self.rdf[i] / self.rdf_counter[i]).is_finite() {
+                self.rdf[i] / self.rdf_counter[i]
+            } else {
+                T::zero()
+            };
+
+            let line = format!(
+                "{:.5}\t{:.5}\t{:.5}\n",
+                (T::from(i).unwrap() + T::from(0.5).unwrap()) * self.dr,
+                normed_rdf,
+                self.rdf_counter[i]
+            );
+            contents.push_str(&line);
         }
 
         file.write_all(contents.as_bytes())
