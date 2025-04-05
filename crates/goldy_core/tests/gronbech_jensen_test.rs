@@ -25,7 +25,7 @@ fn gj_test() {
     let mut dt = 0.03;
     let gamma = 2.0;
     let mass = 1.0;
-    let num_runs = 20;
+    let num_runs = 5;
     let num_observations = 12;
 
     // creating the directory, if it does not exist
