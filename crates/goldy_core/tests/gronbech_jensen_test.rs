@@ -20,28 +20,13 @@ const DIM: usize = 3;
 fn gj_test() {
     // simulation parameters
     let temp = 0.67;
-    let mut runs = 10_000;
-    let mut warm_up = 9_000;
-    let gamma = 10.0;
+    let mut runs = 20_000;
+    let mut warm_up = 15_000;
+    let mut dt = 0.03;
+    let gamma = 2.0;
     let mass = 1.0;
-    let num_runs = 50;
-
-    let dts = [
-        0.0174533,
-        0.0138636,
-        0.0110123,
-        0.00874737,
-        0.00694828,
-        0.00551922,
-        0.00438407,
-        0.00348239,
-        0.00276616,
-        0.00219724,
-        0.00174533,
-        0.00138636,
-        0.00110123,
-        0.000874737,
-    ];
+    let num_runs = 20;
+    let num_observations = 12;
 
     // creating the directory, if it does not exist
     std::fs::create_dir_all("test_outputs").unwrap_or(());
@@ -50,7 +35,7 @@ fn gj_test() {
     let header = "runs,warm_up,dt,ke,ke_sec,pe,pe_sec\n";
     output_file.write(header.as_bytes()).unwrap();
 
-    for dt in dts {
+    for _ in 0..num_observations {
         let (mut mean_ke, mut mean_ke_sec) = (0.0, 0.0);
         let (mut mean_pe, mut mean_pe_sec) = (0.0, 0.0);
 
@@ -64,10 +49,10 @@ fn gj_test() {
             mean_pe_sec += pe_sec;
         }
 
-        mean_ke /= num_runs as f32;
-        mean_ke_sec /= num_runs as f32;
-        mean_pe /= num_runs as f32;
-        mean_pe_sec /= num_runs as f32;
+        mean_ke /= num_runs as f64;
+        mean_ke_sec /= num_runs as f64;
+        mean_pe /= num_runs as f64;
+        mean_pe_sec /= num_runs as f64;
 
         let content = format!(
             "{runs},{warm_up},{dt:.5e},{mean_ke:.5e},{mean_ke_sec:.5e},{mean_pe:.5e},{mean_pe_sec:.5e}\n"
@@ -75,18 +60,19 @@ fn gj_test() {
         output_file.write_all(content.as_bytes()).unwrap();
 
         runs = runs * 5 / 4 + 500;
-        warm_up = runs - 1_000;
+        warm_up = warm_up * 5 / 4 + 500;
+        dt = dt * 0.8;
     }
 }
 
 fn run_gj(
-    temp: f32,
+    temp: f64,
     runs: usize,
     warm_up: usize,
-    gamma: f32,
-    mass: f32,
-    dt: f32,
-) -> (f32, f32, f32, f32) {
+    gamma: f64,
+    mass: f64,
+    dt: f64,
+) -> (f64, f64, f64, f64) {
     let at = AtomTypeBuilder::default()
         .id(1)
         .damping(gamma)
@@ -95,7 +81,7 @@ fn run_gj(
         .unwrap();
 
     // the atoms
-    let mut system: System<f32, DIM> = System::new_cubic(
+    let mut system: System<f64, DIM> = System::new_cubic(
         Vector3::from_element(9),
         1.0817,
         BoundaryTypes::Periodic,
@@ -106,7 +92,7 @@ fn run_gj(
     let mut gj = GronbechJensen::new(system.number_of_atoms());
 
     // lennard-jones
-    let lj = PairPotential::new_lennard_jones(1.0, 2f32.powf(1.0 / 6.0), 2.5);
+    let lj = PairPotential::new_lennard_jones(1.0, 2f64.powf(1.0 / 6.0), 2.5);
     let potential = PairPotentialCollectionBuilder::default()
         .add_potential(&at, &at, lj)
         .build()

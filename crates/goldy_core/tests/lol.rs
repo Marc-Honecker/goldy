@@ -20,28 +20,13 @@ const DIM: usize = 3;
 fn lol_test() {
     // simulation parameters
     let temp = 0.67;
-    let mut runs = 10_000;
-    let mut warm_up = 9_000;
-    let gamma = 10.0;
+    let mut runs = 20_000;
+    let mut warm_up = 15_000;
+    let mut dt = 0.026;
+    let gamma = 2.0;
     let mass = 1.0;
-    let num_runs = 50;
-
-    let dts = [
-        0.012356,
-        0.00981471,
-        0.0077961,
-        0.00619266,
-        0.00491901,
-        0.00390731,
-        0.00310368,
-        0.00246534,
-        0.00195829,
-        0.00155553,
-        0.0012356,
-        0.000981471,
-        0.00077961,
-        0.000619266,
-    ];
+    let num_runs = 20;
+    let num_observations = 12;
 
     // creating the directory, if it does not exist
     std::fs::create_dir_all("test_outputs").unwrap_or(());
@@ -50,7 +35,7 @@ fn lol_test() {
     let header = "runs,warm_up,dt,ke,ke_sec,pe,pe_sec\n";
     output_file.write(header.as_bytes()).unwrap();
 
-    for dt in dts {
+    for _ in 0..num_observations {
         let (mut mean_ke, mut mean_ke_sec) = (0.0, 0.0);
         let (mut mean_pe, mut mean_pe_sec) = (0.0, 0.0);
 
@@ -75,7 +60,8 @@ fn lol_test() {
         output_file.write_all(content.as_bytes()).unwrap();
 
         runs = runs * 5 / 4 + 500;
-        warm_up = runs - 1_000;
+        warm_up = warm_up * 5 / 4 + 500;
+        dt = dt * 0.8;
     }
 }
 
